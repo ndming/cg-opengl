@@ -1,12 +1,10 @@
 // Copyright (c) 2023. Minh Nguyen
 // All rights reserved.
 
-#include <cerrno>
-#include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
+#include <filesystem>
 #include <iostream>
 #include <stb_image_write.h>
-#include <sys/stat.h>
 
 #include "Context.h"
 #include "Engine.h"
@@ -65,14 +63,13 @@ int main() {
             }
         }
         // Create a folder to save the image
-        static const auto dir = std::string("./capture");
-        const auto res = mkdir(dir.c_str());
-        if (res != 0 && errno != EEXIST) {
-            std::cerr << "Failed to create directory: " << strerror(errno) << '\n';
-        } else {
-            // Save the image to this folder
-            const auto path = dir + "/scene.png";
+        static const auto dir = std::filesystem::path{ "./capture" };
+        std::error_code err;
+        if (std::filesystem::create_directories(dir, err) || std::filesystem::exists(dir)) {
+            const auto path = dir.string() + "/scene.png";
             stbi_write_png(path.c_str(), w, h, 4, data, w * 4);
+        } else {
+            std::cerr << err.message() << '\n';
         }
         delete[] data;
     });
