@@ -18,14 +18,14 @@ endif()
 # GLAD
 add_subdirectory(external/glad)
 include_directories(external/glad/include)
-
 # GLFW
 add_subdirectory(external/glfw)
 include_directories(external/glfw/include)
-
 # GLM
 add_subdirectory(external/glm)
 include_directories(external/glm/glm)
+# stb
+include_directories(external/stb/include)
 
 # Add include directory
 include_directories(include include/drawable)
@@ -56,6 +56,8 @@ set(SOURCES
         src/drawable/Sphere.cpp
         src/drawable/Sun.cpp
         src/drawable/Tetrahedron.cpp
+        external/stb/stb_image.cpp
+        external/stb/stb_image_write.cpp
 )
 
 # Copy resources in res/ to the binary directory

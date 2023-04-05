@@ -1,12 +1,7 @@
 // Copyright (c) 2023. Minh Nguyen
 // All rights reserved.
 
-//
-// Created by Minh Nguyen on 4/4/2023.
-//
-
-#ifndef CG_OPENGL_CONTEXT_H
-#define CG_OPENGL_CONTEXT_H
+#pragma once
 
 #include <glad/glad.h> // GLAD must be included before GLFW
 #include <GLFW/glfw3.h>
@@ -91,5 +86,3 @@ private:
         std::unique_ptr<Context> operator()(std::string_view name, int width, int height) const;
     };
 };
-
-#endif //CG_OPENGL_CONTEXT_H

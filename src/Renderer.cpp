@@ -7,12 +7,10 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "Camera.h"
 #include "Renderer.h"
 
 #include "LightManager.h"
 #include "RenderableManager.h"
-#include "Scene.h"
 #include "TransformManager.h"
 #include "View.h"
 
@@ -175,11 +173,6 @@ void Renderer::togglePolygonMode() {
 	}
 }
 
-void Renderer::setPolygonMode(const PolygonMode mode) {
-	_polygonMode = mode;
-	glPolygonMode(GL_FRONT_AND_BACK, static_cast<GLenum>(_polygonMode));
-}
-
-Renderer::PolygonMode Renderer::getPolygonMode() const {
-	return _polygonMode;
+void Renderer::readFramebufferRgba(const int x, const int y, const int width, const int height, unsigned char *data) {
+    glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 }

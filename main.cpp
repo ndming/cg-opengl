@@ -1,7 +1,12 @@
 // Copyright (c) 2023. Minh Nguyen
 // All rights reserved.
 
+#include <cerrno>
+#include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
+#include <stb_image_write.h>
+#include <sys/stat.h>
 
 #include "Context.h"
 #include "Engine.h"
@@ -44,16 +49,33 @@ int main() {
     });
 
     // Capture the framebuffer on C press
-    // context->setOnPress(Context::Key::C, [&context] {
-    //     const auto& [w, h] = context->getFramebufferSize();
-    //     const auto image = cv::Mat(h, w, CV_8UC3);
-    //     glReadPixels(0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, image.data);
-    //     // Flip the image vertically (because OpenGL has the origin in the bottom-left corner)
-    //     flip(image, image, 0);
-    //
-    //     // Save the image as a file
-    //     imwrite("captures/scene.png", image);
-    // });
+    context->setOnPress(Context::Key::C, [&context] {
+        // Acquire the framebuffer size
+        const auto& [w, h] = context->getFramebufferSize();
+        // Prepare a placeholder for RGBA image
+        const auto data = new unsigned char[w * h * 4];
+        // Load the content of the framebuffer
+        Renderer::readFramebufferRgba(0, 0, w, h, data);
+        // Flip the image vertically
+        for (int y = 0; y < h / 2; y++) {
+            int i1 = y * w * 4;
+            int i2 = (h - y - 1) * w * 4;
+            for (int x = 0; x < w * 4; x++) {
+                std::swap(data[i1 + x], data[i2 + x]);
+            }
+        }
+        // Create a folder to save the image
+        static const auto dir = std::string("./capture");
+        const auto res = mkdir(dir.c_str());
+        if (res != 0 && errno != EEXIST) {
+            std::cerr << "Failed to create directory: " << strerror(errno) << '\n';
+        } else {
+            // Save the image to this folder
+            const auto path = dir + "/scene.png";
+            stbi_write_png(path.c_str(), w, h, 4, data, w * 4);
+        }
+        delete[] data;
+    });
 
     // Create a camera
     const auto camera = engine->createCamera(EntityManager::get()->create());

@@ -31,13 +31,11 @@ public:
 		FILL = GL_FILL
 	};
 
-	void setPolygonMode(PolygonMode mode);
-
 	void togglePolygonMode();
 
-	[[nodiscard]] PolygonMode getPolygonMode() const;
-
 	void render(const View& view) const;
+
+    static void readFramebufferRgba(int x, int y, int width, int height, unsigned char* data);
 
 private:
 	Renderer() = default;
