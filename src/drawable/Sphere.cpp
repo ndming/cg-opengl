@@ -133,21 +133,11 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 
 	const auto shader = Shader::Builder(_shaderModel).build(engine);
 	if (_shaderModel == Shader::Model::PHONG) {
-		const auto [ambient, diffuse, specular, shininess] = MATERIAL;
-		shader->use();
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_AMBIENT,
-			ambient.x, ambient.y, ambient.z
-		);
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_DIFFUSE,
-			diffuse.x, diffuse.y, diffuse.z
-		);
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_SPECULAR,
-			specular.x, specular.y, specular.z
-		);
-		shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, shininess);
+        shader->use();
+        shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
 	}
 
 	const auto entity = EntityManager::get()->create();
@@ -187,11 +177,7 @@ Sphere::SubdivisionBuilder& Sphere::SubdivisionBuilder::initialPolygon(const Pol
 	return *this;
 }
 
-Sphere::SubdivisionBuilder& Sphere::SubdivisionBuilder::uniformColor(
-	const float r, 
-	const float g, 
-	const float b
-) {
+Sphere::SubdivisionBuilder& Sphere::SubdivisionBuilder::uniformColor(const float r, const float g, const float b) {
 	if (!_uniformColor) {
 		_uniformColor = new float[3] { r, g, b };
 	} else {
@@ -270,21 +256,11 @@ std::unique_ptr<Drawable> Sphere::SubdivisionBuilder::build(Engine& engine) {
 
 	const auto shader = Shader::Builder(_shaderModel).build(engine);
 	if (_shaderModel == Shader::Model::PHONG) {
-		const auto [ambient, diffuse, specular, shininess] = MATERIAL;
-		shader->use();
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_AMBIENT,
-			ambient.x, ambient.y, ambient.z
-		);
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_DIFFUSE,
-			diffuse.x, diffuse.y, diffuse.z
-		);
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_SPECULAR,
-			specular.x, specular.y, specular.z
-		);
-		shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, shininess);
+        shader->use();
+        shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
 	}
 
 	const auto entity = EntityManager::get()->create();
@@ -326,10 +302,10 @@ std::vector<float> Sphere::SubdivisionBuilder::subdivide(
 
 std::vector<glm::vec3> Sphere::SubdivisionBuilder::getFaces() const {
 	if (_polyhedron == Polyhedron::TETRAHEDRON) {
-		const auto v1 = glm::vec3{  glm::sqrt(8.0f / 9.0f),                    0.0f, -1.0f / 3.0f };
-		const auto v2 = glm::vec3{ -glm::sqrt(2.0f / 9.0f),  glm::sqrt(2.0f / 3.0f), -1.0f / 3.0f };
+		const auto v1 = glm::vec3{ glm::sqrt(8.0f / 9.0f),  0.0f,                       -1.0f / 3.0f };
+		const auto v2 = glm::vec3{ -glm::sqrt(2.0f / 9.0f), glm::sqrt(2.0f / 3.0f),  -1.0f / 3.0f };
 		const auto v3 = glm::vec3{ -glm::sqrt(2.0f / 9.0f), -glm::sqrt(2.0f / 3.0f), -1.0f / 3.0f };
-		const auto v4 = glm::vec3{                    0.0f,                    0.0f,         1.0f };
+		const auto v4 = glm::vec3{ 0.0f,                       0.0f,                       1.0f };
 
 		// These points are supposed to get scaled by the _radius,
 		// but for the time being it is considered a feature.

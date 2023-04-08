@@ -1,71 +1,45 @@
 // Copyright (c) 2023. Minh Nguyen
 // All rights reserved.
 
-#include <utility>
-
 #include "LightManager.h"
 #include "EntityManager.h"
 
-LightManager::Builder& LightManager::Builder::color(
-	const float r, 
-	const float g, 
-	const float b
-) {
+LightManager::Builder& LightManager::Builder::color(const float r, const float g, const float b) {
 	_rgb[0] = r;
 	_rgb[1] = g;
 	_rgb[2] = b;
 	return *this;
 }
 
-LightManager::Builder& LightManager::Builder::direction(
-	const float x,
-	const float y,
-	const float z
-) {
+LightManager::Builder& LightManager::Builder::direction(const float x, const float y, const float z) {
 	_dir[0] = x;
 	_dir[1] = y;
 	_dir[2] = z;
 	return *this;
 }
 
-LightManager::Builder& LightManager::Builder::position(
-	const float x,
-	const float y,
-	const float z
-) {
+LightManager::Builder& LightManager::Builder::position(const float x, const float y, const float z) {
 	_pos[0] = x;
 	_pos[1] = y;
 	_pos[2] = z;
 	return *this;
 }
 
-LightManager::Builder& LightManager::Builder::ambient(
-	const float r,
-	const float g,
-	const float b
-) {
+LightManager::Builder& LightManager::Builder::ambient(const float r, const float g, const float b) {
 	_ambient[0] = r;
 	_ambient[1] = g;
 	_ambient[2] = b;
 	return *this;
 }
 
-LightManager::Builder& LightManager::Builder::diffuse(
-	const float r,
-	const float g,
-	const float b
-) {
+LightManager::Builder& LightManager::Builder::diffuse(const float r, const float g, const float b) {
 	_diffuse[0] = r;
 	_diffuse[1] = g;
 	_diffuse[2] = b;
 	return *this;
 }
 
-LightManager::Builder& LightManager::Builder::specular(
-	const float r,
-	const float g,
-	const float b
-) {
+LightManager::Builder& LightManager::Builder::specular(const float r, const float g, const float b) {
 	_specular[0] = r;
 	_specular[1] = g;
 	_specular[2] = b;
@@ -140,13 +114,8 @@ bool LightManager::hasComponent(const Entity entity) const {
 		|| _pointLights.contains(entity);
 }
 
-void LightManager::setPosition(
-	const Entity entity, 
-	const float x, 
-	const float y, 
-	const float z
-) {
-	if (_pointLights.contains(entity)) {
-		_pointLights[entity]->position = glm::vec3{ x, y, z };
+void LightManager::setPosition(const Entity light, const float x, const float y, const float z) {
+	if (_pointLights.contains(light)) {
+		_pointLights[light]->position = glm::vec3{x, y, z };
 	}
 }

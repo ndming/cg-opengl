@@ -13,10 +13,7 @@ RenderableManager::Builder::Builder(const int count) {
 	_shaders.resize(count);
 }
 
-RenderableManager::Builder& RenderableManager::Builder::shader(
-	const int index, 
-	Shader* const shader
-) {
+RenderableManager::Builder& RenderableManager::Builder::shader(const int index, Shader* const shader) {
 	_shaders[index] = shader;
 	return *this;
 }
@@ -65,9 +62,7 @@ RenderableManager::Builder& RenderableManager::Builder::geometry(
 	return *this;
 }
 
-std::pair<int, int> RenderableManager::Builder::resolveAttributeType(
-	const VertexBuffer::AttributeType type
-) {
+std::pair<int, int> RenderableManager::Builder::resolveAttributeType(const VertexBuffer::AttributeType type) {
 	switch (type) {
 	case VertexBuffer::AttributeType::UBYTE4:
 		return std::make_pair(GL_UNSIGNED_BYTE, 4);
@@ -83,9 +78,7 @@ std::pair<int, int> RenderableManager::Builder::resolveAttributeType(
 	return {};
 }
 
-int RenderableManager::Builder::resolveIndexSize(
-	const IndexBuffer::Builder::IndexType type
-) {
+int RenderableManager::Builder::resolveIndexSize(const IndexBuffer::Builder::IndexType type) {
 	switch (type) {
 	case IndexBuffer::Builder::IndexType::UINT:
 		return sizeof(GLuint);

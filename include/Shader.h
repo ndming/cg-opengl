@@ -19,6 +19,12 @@ public:
 
 	class Uniform {
 	public:
+        static constexpr auto MATERIAL_AMBIENT   = "material.ambient";
+        static constexpr auto MATERIAL_DIFFUSE   = "material.diffuse";
+        static constexpr auto MATERIAL_SPECULAR  = "material.specular";
+        static constexpr auto MATERIAL_SHININESS = "material.shininess";
+
+    private:
 		static constexpr auto MODEL      = "model";
 		static constexpr auto VIEW       = "view";
 		static constexpr auto PROJECTION = "projection";
@@ -37,13 +43,10 @@ public:
 		static constexpr auto POINT_LIGHT_LINEAR    = "pointLight.linear";
 		static constexpr auto POINT_LIGHT_QUADRATIC = "pointLight.quadratic";
 
-		static constexpr auto MATERIAL_AMBIENT   = "material.ambient";
-		static constexpr auto MATERIAL_DIFFUSE   = "material.diffuse";
-		static constexpr auto MATERIAL_SPECULAR  = "material.specular";
-		static constexpr auto MATERIAL_SHININESS = "material.shininess";
-
 		static constexpr auto ENABLED_DIRECTIONAL_LIGHT = "enabledDirectionalLight";
 		static constexpr auto ENABLED_POINT_LIGHT       = "enabledPointLight";
+
+        friend class Renderer;
 	};
 
 	class Builder {

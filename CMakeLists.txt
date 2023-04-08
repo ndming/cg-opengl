@@ -56,6 +56,9 @@ set(SOURCES
         src/drawable/Sphere.cpp
         src/drawable/Sun.cpp
         src/drawable/Tetrahedron.cpp
+        src/utils/MediaExporter.cpp
+        src/utils/SgdIterator.cpp
+        src/utils/TextureLoader.cpp
         external/stb/stb_image.cpp
         external/stb/stb_image_write.cpp
 )

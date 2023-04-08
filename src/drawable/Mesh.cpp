@@ -130,21 +130,11 @@ std::unique_ptr<Drawable> Mesh::Builder::build(Engine& engine) {
 
 	const auto shader = Shader::Builder(_shaderModel).build(engine);
 	if (_shaderModel == Shader::Model::PHONG) {
-		const auto [ambient, diffuse, specular, shininess] = MATERIAL;
 		shader->use();
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_AMBIENT,
-			ambient.x, ambient.y, ambient.z
-		);
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_DIFFUSE,
-			diffuse.x, diffuse.y, diffuse.z
-		);
-		shader->setUniform(
-			Shader::Uniform::MATERIAL_SPECULAR,
-			specular.x, specular.y, specular.z
-		);
-		shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, shininess);
+		shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
+		shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
+		shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
+		shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
 	}
 
 	const auto entity = EntityManager::get()->create();

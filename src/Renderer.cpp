@@ -61,8 +61,9 @@ void Renderer::render(const View& view) const {
 
 		// For each geometry in this renderable
 		for (std::size_t i = 0; i < mesh->elements.size(); ++i) {
-			// Specify which program to use first
+            // Each mesh has a corresponding shader
 			const auto shader = mesh->shaders[i];
+            // Specify which program to use first
 			shader->use();
 
 			// Set the MVP and the normal matrix
@@ -75,19 +76,16 @@ void Renderer::render(const View& view) const {
 			shader->setUniform(Shader::Uniform::ENABLED_DIRECTIONAL_LIGHT, false);
 			shader->setUniform(Shader::Uniform::ENABLED_POINT_LIGHT, false);
 
-			// Render all lights for this renderable
+			// Render all lights for this geometry
 			const auto lightManager = LightManager::getInstance();
 			for (const auto light : scene->_lights) {
 				if (lightManager->_directionalLights.contains(light)) {
 					const auto& dirLight = lightManager->_directionalLights[light];
 					const auto dir = normalMat * glm::vec4{ dirLight->direction, 0.0f };
+					shader->setUniform(Shader::Uniform::DIRECTIONAL_LIGHT_DIRECTION, dir.x, dir.y, dir.z);
 					shader->setUniform(
-						Shader::Uniform::DIRECTIONAL_LIGHT_DIRECTION,
-						dir.x, dir.y, dir.z
-					);
-					shader->setUniform(
-						Shader::Uniform::DIRECTIONAL_LIGHT_AMBIENT,
-						dirLight->ambient.x, dirLight->ambient.y, dirLight->ambient.z
+                            Shader::Uniform::DIRECTIONAL_LIGHT_AMBIENT,
+                            dirLight->ambient.x, dirLight->ambient.y, dirLight->ambient.z
 					);
 					shader->setUniform(
 						Shader::Uniform::DIRECTIONAL_LIGHT_DIFFUSE,
@@ -104,12 +102,12 @@ void Renderer::render(const View& view) const {
 					const auto& pointLight = lightManager->_pointLights[light];
 
 					// Point light may have an associated transform component.
-					auto lightModelMat = glm::mat4(1.0f);
-					if (tcm->_transforms.contains(light)) {
-						lightModelMat = tcm->_transforms[light];
-					}
+					// auto lightModelMat = glm::mat4(1.0f);
+					// if (tcm->_transforms.contains(light)) {
+					// 	lightModelMat = tcm->_transforms[light];
+					// }
 					// The position of point light in camera space
-					const auto lightPos = viewMat * lightModelMat * glm::vec4{ pointLight->position, 1.0f };
+					const auto lightPos = viewMat * glm::vec4{ pointLight->position, 1.0f };
 
 					shader->setUniform(
 						Shader::Uniform::POINT_LIGHT_POSITION,

@@ -37,7 +37,7 @@ public:
 		int _segmentsY{ 40 };
 
 		static constexpr auto MIN_SEGMENTS = 1;
-		static constexpr auto MIN_EXTENT   = 0.1f;
+		static constexpr auto MIN_EXTENT = 0.1f;
 	};
 
 private:

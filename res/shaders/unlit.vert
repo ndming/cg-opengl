@@ -2,7 +2,7 @@
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
-layout (location = 2) in vec4 color;    // 0xAARRGGBB
+layout (location = 2) in vec4 color;
 layout (location = 3) in vec2 uv0;
 layout (location = 4) in vec2 uv1;
 
@@ -12,7 +12,14 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-vec4 convertToSRGB(const uint color) {
+vec4 convertToSRGB(const uint color);
+
+void main() {
+	gl_Position = projection * view * model * vec4(position, 1.0f);
+	variedColor = color;
+}
+
+vec4 convertToSRGB(const uint color) {  // 0xAARRGGBB
     vec4 rgba = vec4(
         float((color >> 16) & 0xFF) / 255.0f,
         float((color >>  8) & 0xFF) / 255.0f,
@@ -28,9 +35,4 @@ vec4 convertToSRGB(const uint color) {
     );
 
     return rgba;
-}
-
-void main() {
-	gl_Position = projection * view * model * vec4(position, 1.0f);
-	variedColor = color;
 }

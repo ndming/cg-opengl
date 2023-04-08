@@ -59,7 +59,7 @@ public:
 
 	[[nodiscard]] bool hasComponent(Entity entity) const;
 
-	void setPosition(Entity entity, float x, float y, float z);
+	void setPosition(Entity light, float x, float y, float z);
 
 private:
 	struct DirectionalLight {
