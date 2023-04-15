@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "Context.h"
 #include "Engine.h"
@@ -15,15 +16,20 @@
 #include "drawable/Sphere.h"
 #include "drawable/Sun.h"
 
-#include "utils/SgdIterator.h"
+#include "utils/DescentIterator.h"
+#include "utils/DescentTracer.h"
 #include "utils/MediaExporter.h"
 
 glm::mat4 getBallTransform(
-    float x, float y, float ballRadius,
+    float x, float y, float ballRadius, float distance,
     const std::function<float(float, float)>& objective,
     const std::function<float(float, float)>& gradientX,
     const std::function<float(float, float)>& gradientY
 );
+
+static float ballAngle{ 0.0f };
+
+inline float getAuraVelocity(long deltaTimeMillis, float speed);
 
 int main() {
     // The window context
@@ -43,7 +49,7 @@ int main() {
     // Clear the color buffer
     auto clearOptions = renderer->getClearOptions();
     // clearOptions.clearColor = { 0.09804f, 0.14118f, 0.15686f, 1.0f };
-    clearOptions.clearColor = { 0.01f, 0.02f, 0.03f, 1.0f };
+    clearOptions.clearColor = { 0.02f, 0.04f, 0.06f, 1.0f };
     renderer->setClearOptions(clearOptions);
 
     // Toggle polygon mode on T press
@@ -51,16 +57,18 @@ int main() {
         renderer->togglePolygonMode();
     });
 
-    // Capture the framebuffer on C press
-    const auto exporter = MediaExporter::Builder().folderPath("capture").build();
-    context->setOnPress(Context::Key::C, [&context, &exporter] {
+    // Capture the framebuffer on F1 press
+    const auto exporter = MediaExporter::Builder()
+            .folderPath("capture")
+            .build();
+    context->setOnPress(Context::Key::F1, [&context, &exporter] {
         // Acquire the framebuffer size
         const auto& [w, h] = context->getFramebufferSize();
         // Prepare a placeholder for RGBA image
         const auto data = new unsigned char[w * h * 4];
         // Load the content of the framebuffer
         Renderer::readFramebufferRgba(0, 0, w, h, data);
-        // Flip the image vertically since images have the origin at the top left, while OpenGL expects the origin
+        // Flip the image vertically since most images have the origin at the top left, while OpenGL expects the origin
         // at the bottom left.
         for (int y = 0; y < h / 2; y++) {
             int i1 = y * w * 4;
@@ -99,17 +107,17 @@ int main() {
     });
 
     // Manage all transformations
-    const auto tcm = engine->getTransformManager();
+    const auto tm = engine->getTransformManager();
 
     // The rolling ball
     const auto ball = Sphere::SubdivisionBuilder()
-            .shaderModel(Shader::Model::PHONG)
+            .shaderModel(Shader::Model::UNLIT)
             .phongMaterial(phong::PEARL)
             .build(*engine);
     static constexpr auto ballRadius = 0.4f;
     // Scale the ball down to this radius
     const auto ballTrans = glm::scale(glm::mat4(1.0f), glm::vec3{ ballRadius, ballRadius, ballRadius });
-    tcm->setTransform(ball->getEntity(), ballTrans);
+    tm->setTransform(ball->getEntity(), ballTrans);
 
     // The objective function
     const auto objective = std::function{ [](const float x, const float y) {
@@ -133,36 +141,102 @@ int main() {
             .build(*engine);
 
     // The SGD iterator
-    auto sgd = SgdIterator::Builder()
+    auto sgd = DescentIterator::Builder()
             .gradientX(gradientX)
             .gradientY(gradientY)
-            .convergenceRate(0.1f)
+            .convergenceRate(0.08f)
             .build();
     // The initial position of the ball
     sgd->resetState(0.0f, 0.0f);
     // Transform the ball
-    const auto trans = getBallTransform(0.0f, 0.0f, ballRadius, objective, gradientX, gradientY);
-    tcm->setTransform(ball->getEntity(), trans);
+    const auto trans = getBallTransform(0.0f, 0.0f, ballRadius, 0.0f, objective, gradientX, gradientY);
+    tm->setTransform(ball->getEntity(), trans);
+
+    // Trace out the descent path
+    auto tracer = DescentTracer::Builder()
+            .objective(objective)
+            .gradientX(gradientX)
+            .gradientY(gradientY)
+            .traceSize(0.1f)
+            .heightPadding(0.01f)
+            .traceColor(1.0f, 1.0f, 1.0f)
+            .markColor(0.5f, 0.5f, 0.5f)
+            .build();
 
     // Random the SGD state on R press
-    context->setOnPress(Context::Key::R, [&sgd, &objective, &tcm, &ball, &gradientX, &gradientY]{
+    context->setOnPress(Context::Key::R, [&]{
         // Random the position of the ball on the mesh
         sgd->randomState(8.0f, 8.0f);
         // Get the random position
         const auto [x, y] = sgd->getState();
+        // Reset the rolling angle first
+        ballAngle = 0.0f;
         // Transform the ball
-        const auto trans = getBallTransform(x, y, ballRadius, objective, gradientX, gradientY);
-        tcm->setTransform(ball->getEntity(), trans);
+        const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
+        tm->setTransform(ball->getEntity(), trans);
+        // Reset the tracer
+        tracer->resetTo(x, y, *scene, *engine);
     });
 
-    // Manually descent the ball on I press
-    context->setOnLongPress(Context::Key::I, [&sgd, &objective, &tcm, &ball, &gradientX, &gradientY]{
+    // Move the ball to some interested position with Z
+    context->setOnPress(Context::Key::Z, [&]{
+        const auto x = 5.5f;
+        const auto y = 0.0f;
+        // Move the ball to some peak of the mesh
+        sgd->resetState(x, y);
+        // Reset the rolling angle first
+        ballAngle = 0.0f;
+        // Transform the ball
+        const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
+        tm->setTransform(ball->getEntity(), trans);
+        // Reset the tracer
+        tracer->resetTo(x, y, *scene, *engine);
+    });
+
+    // Move the ball to some interested position with X
+    context->setOnPress(Context::Key::X, [&]{
+        const auto x = -6.0f;
+        const auto y = -0.5f;
+        // Move the ball to some peak of the mesh
+        sgd->resetState(x, y);
+        // Reset the rolling angle first
+        ballAngle = 0.0f;
+        // Transform the ball
+        const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
+        tm->setTransform(ball->getEntity(), trans);
+        // Reset the tracer
+        tracer->resetTo(x, y, *scene, *engine);
+    });
+
+    // Move the ball to some interested position with C
+    context->setOnPress(Context::Key::C, [&]{
+        const auto x = 0.0f;
+        const auto y = 0.0f;
+        // Move the ball to some peak of the mesh
+        sgd->resetState(x, y);
+        // Reset the rolling angle first
+        ballAngle = 0.0f;
+        // Transform the ball
+        const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
+        tm->setTransform(ball->getEntity(), trans);
+        // Reset the tracer
+        tracer->resetTo(x, y, *scene, *engine);
+    });
+
+    // Manually descent the ball on SPACE press
+    context->setOnLongPress(Context::Key::SPACE, [&]{
+        // Get the current position
+        const auto [prevX, prevY] = sgd->getState();
+        // Descent the ball
         sgd->iterate();
         // Get the new position
         const auto [x, y] = sgd->getState();
+        const auto distance = glm::distance(glm::vec2{ prevX, prevY }, glm::vec2{ x, y });
         // Transform the ball
-        const auto trans = getBallTransform(x, y, ballRadius, objective, gradientX, gradientY);
-        tcm->setTransform(ball->getEntity(), trans);
+        const auto trans = getBallTransform(x, y, ballRadius, distance, objective, gradientX, gradientY);
+        tm->setTransform(ball->getEntity(), trans);
+        // Make traces
+        tracer->traceTo(x, y, *scene, *engine);
     });
 
     // Add a global light
@@ -184,68 +258,68 @@ int main() {
 
     const auto aura = Sun::Builder().build(*engine);
     const auto auraTrans = translate(glm::mat4(1.0f), auraPos);
-    tcm->setTransform(aura->getEntity(), auraTrans);
+    tm->setTransform(aura->getEntity(), auraTrans);
 
     // Move the aura forward
     context->setOnLongPress(Context::Key::W, [&] {
-        const auto velocity = context->getDeltaTime() * SPEED;
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
         auraPos += glm::vec3{0.0f, 1.0f, 0.0f } * velocity;
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Move the aura backward
     context->setOnLongPress(Context::Key::S, [&] {
-        const auto velocity = context->getDeltaTime() * SPEED;
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
         auraPos += glm::vec3{0.0f, -1.0f, 0.0f } * velocity;
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Move the aura left
     context->setOnLongPress(Context::Key::A, [&] {
-        const auto velocity = context->getDeltaTime() * SPEED;
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
         auraPos += glm::vec3{-1.0f, 0.0f, 0.0f } * velocity;
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Move the aura right
     context->setOnLongPress(Context::Key::D, [&] {
-        const auto velocity = context->getDeltaTime() * SPEED;
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
         auraPos += glm::vec3{1.0f, 0.0f, 0.0f} * velocity;
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Move the aura up
     context->setOnLongPress(Context::Key::LCTR, [&] {
-        const auto velocity = context->getDeltaTime() * SPEED;
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
         auraPos += glm::vec3{0.0f, 0.0f, -1.0f } * velocity;
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Move the aura down
     context->setOnLongPress(Context::Key::LSHF, [&] {
-        const auto velocity = context->getDeltaTime() * SPEED;
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
         auraPos += glm::vec3{0.0f, 0.0f, 1.0f } * velocity;
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Snap the aura back to the initial position
-    context->setOnLongPress(Context::Key::SPACE, [&] {
+    context->setOnLongPress(Context::Key::I, [&] {
         auraPos = glm::vec3{4.0f, 4.0f, 8.0f };
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tcm->setTransform(aura->getEntity(), trans);
+        tm->setTransform(aura->getEntity(), trans);
     });
 
     // Add renderables to the scene
@@ -256,7 +330,9 @@ int main() {
     scene->addEntity(globalLight);
 
     // The render loop
-    context->loop([&] { renderer->render(*view); });
+    context->loop([&] {
+        renderer->render(*view);
+    });
 
     // Destroy all resources
     engine->destroyEntity(ball->getEntity());
@@ -286,7 +362,7 @@ int main() {
 }
 
 glm::mat4 getBallTransform(
-    const float x, const float y, const float ballRadius,
+    const float x, const float y, const float ballRadius, const float distance,
     const std::function<float(float, float)>& objective,
     const std::function<float(float, float)>& gradientX,
     const std::function<float(float, float)>& gradientY
@@ -296,9 +372,22 @@ glm::mat4 getBallTransform(
     const auto dirX = gradientX(x, y);
     const auto dirY = gradientY(x, y);
     const auto norm = -glm::normalize(glm::vec3{ dirX, dirY, -1.0f });
-    // Transform the ball, while maintaining the scaling
+    // Finally, translate the ball in the normal direction so that the ball will barely touch the mesh.
     auto trans = glm::translate(glm::mat4(1.0f), norm * ballRadius);
+    // Then, we translated the ball to the new position.
     trans = glm::translate(trans, glm::vec3{ x, y, z });
+    // Then, we rotate the ball according to the distance, updating the global angle (for the time being).
+    ballAngle += distance / ballRadius;
+    const auto rollDirection = glm::normalize(glm::vec3{ -dirX, -dirY, 0.0f });
+    const auto rotationAxis = glm::cross(glm::vec3{ 0.0f, 0.0f, 1.0f }, rollDirection);
+    const auto quaternion = glm::angleAxis(ballAngle, rotationAxis);
+    const auto rotationMat = glm::mat4_cast(quaternion);
+    trans *= rotationMat;
+    // We first scale the ball uniformly to its radius.
     trans = glm::scale(trans, glm::vec3{ ballRadius, ballRadius, ballRadius });
     return trans;
+}
+
+inline float getAuraVelocity(const long deltaTimeMillis, const float speed) {
+    return static_cast<float>(deltaTimeMillis) / 1000.0f * speed;
 }

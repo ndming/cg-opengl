@@ -7,20 +7,20 @@
 #include <memory>
 #include <random>
 
-class SgdIterator {
+class DescentIterator {
 public:
     class Builder {
     public:
         Builder& convergenceRate(float rate);
 
-        Builder& gradientX(std::function<float(float, float)> gradient);
-        Builder& gradientY(std::function<float(float, float)> gradient);
+        Builder& gradientX(std::function<float(float, float)> gradient) noexcept;
+        Builder& gradientY(std::function<float(float, float)> gradient) noexcept;
 
-        std::unique_ptr<SgdIterator> build();
+        std::unique_ptr<DescentIterator> build();
 
     private:
-        std::function<float(float, float)> _gradientX{ [](const auto x, const auto y){ return 2 * x; }};
-        std::function<float(float, float)> _gradientY{ [](const auto x, const auto y){ return 2 * y; }};
+        std::function<float(float, float)> _gradientX{ nullptr };
+        std::function<float(float, float)> _gradientY{ nullptr };
 
         float _convergenceRate{ 0.1f };
     };
@@ -34,7 +34,7 @@ public:
     void iterate();
 
 private:
-    SgdIterator(
+    DescentIterator(
         std::function<float(float, float)>&& gradientX,
         std::function<float(float, float)>&& gradientY,
         float convergenceRate

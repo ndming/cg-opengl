@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(cg_opengl)
+project(CG2023)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -56,8 +56,10 @@ set(SOURCES
         src/drawable/Sphere.cpp
         src/drawable/Sun.cpp
         src/drawable/Tetrahedron.cpp
+        src/drawable/Trace.cpp
+        src/utils/DescentTracer.cpp
         src/utils/MediaExporter.cpp
-        src/utils/SgdIterator.cpp
+        src/utils/DescentIterator.cpp
         src/utils/TextureLoader.cpp
         external/stb/stb_image.cpp
         external/stb/stb_image_write.cpp
@@ -76,7 +78,7 @@ else()
 endif()
 
 # Add target
-add_executable(cg_opengl main.cpp ${SOURCES})
+add_executable(CG2023 main.cpp ${SOURCES})
 
 # Linking
-target_link_libraries(cg_opengl PRIVATE glfw glad glm)
+target_link_libraries(CG2023 PRIVATE glfw glad glm)
