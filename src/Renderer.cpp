@@ -81,11 +81,13 @@ void Renderer::render(const View& view) const {
 			for (const auto light : scene->_lights) {
 				if (lightManager->_directionalLights.contains(light)) {
 					const auto& dirLight = lightManager->_directionalLights[light];
-					const auto dir = normalMat * glm::vec4{ dirLight->direction, 0.0f };
-					shader->setUniform(Shader::Uniform::DIRECTIONAL_LIGHT_DIRECTION, dir.x, dir.y, dir.z);
 					shader->setUniform(
-                            Shader::Uniform::DIRECTIONAL_LIGHT_AMBIENT,
-                            dirLight->ambient.x, dirLight->ambient.y, dirLight->ambient.z
+                        Shader::Uniform::DIRECTIONAL_LIGHT_DIRECTION,
+                        dirLight->direction.x, dirLight->direction.y, dirLight->direction.z
+                    );
+					shader->setUniform(
+                        Shader::Uniform::DIRECTIONAL_LIGHT_AMBIENT,
+                        dirLight->ambient.x, dirLight->ambient.y, dirLight->ambient.z
 					);
 					shader->setUniform(
 						Shader::Uniform::DIRECTIONAL_LIGHT_DIFFUSE,
