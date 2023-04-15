@@ -88,11 +88,6 @@ private:
 
 	std::set<Shader*> _shaders{};
 
-	class Factory {
-	public:
-		std::unique_ptr<Engine> operator()() const;
-	};
-
 	friend class IndexBuffer;
 	friend class Shader;
 	friend class VertexBuffer;

@@ -7,13 +7,8 @@
 
 #include "Engine.h"
 
-std::unique_ptr<Engine> Engine::Factory::operator()() const {
-	return std::unique_ptr<Engine>(new Engine{});
-}
-
 std::unique_ptr<Engine> Engine::create() {
-	static constexpr auto FACTORY = Factory();
-	return FACTORY();
+    return std::unique_ptr<Engine>(new Engine{});
 }
 
 Engine::Engine() {
