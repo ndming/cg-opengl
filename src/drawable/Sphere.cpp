@@ -219,14 +219,13 @@ std::unique_ptr<Drawable> Sphere::SubdivisionBuilder::build(Engine& engine) {
 			}
 		}
 	}
-
 	delete _uniformColor;
 
+    // Fill the index buffer with incremental values
 	const auto vertexCount = static_cast<int>(positions.size() / 3);
-	auto indices = std::vector<unsigned>{};
-	for (auto i = 0; i < vertexCount; ++i) {
-		indices.push_back(static_cast<unsigned>(i));
-	}
+	auto indices = std::vector<unsigned>(vertexCount);
+    auto iotaView = std::ranges::iota_view(0);
+    std::ranges::copy(iotaView.begin(), iotaView.begin() + vertexCount, indices.begin());
 
 	constexpr auto floatSize = 4;
 	const auto vertexBuffer = VertexBuffer::Builder(3)
