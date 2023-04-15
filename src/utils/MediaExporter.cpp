@@ -8,7 +8,7 @@
 
 MediaExporter::Builder& MediaExporter::Builder::folderPath(const std::string_view path) {
     _folderPath = std::string{ path.data(), path.size() };
-    if (*_folderPath.end() != '/') {
+    if (_folderPath.back() != '/') {
         _folderPath += '/';
     }
     return *this;
