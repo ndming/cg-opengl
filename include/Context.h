@@ -26,17 +26,19 @@ public:
         A = GLFW_KEY_A,
         C = GLFW_KEY_C,
         D = GLFW_KEY_D,
-        F = GLFW_KEY_F,
         I = GLFW_KEY_I,
         R = GLFW_KEY_R,
         S = GLFW_KEY_S,
         T = GLFW_KEY_T,
         W = GLFW_KEY_W,
-        SPACE = GLFW_KEY_SPACE
+        X = GLFW_KEY_X,
+        Z = GLFW_KEY_Z,
+        SPACE = GLFW_KEY_SPACE,
+        F1 = GLFW_KEY_F1
     };
     static std::unique_ptr<Context> create(
-            std::string_view name = "Computer Graphics",
-            int width = 800, int height = 600
+        std::string_view name = "Computer Graphics",
+        int width = 800, int height = 600
     );
 
     void setClose(bool close) const;
@@ -53,9 +55,7 @@ public:
 
     void loop(const std::function<void()>& onFrame);
 
-    [[nodiscard]] float getCurrentTime() const;
-
-    [[nodiscard]] float getDeltaTime() const;
+    [[nodiscard]] long getDeltaTimeMillis() const;
 
     [[nodiscard]] std::pair<int, int> getFramebufferSize() const;
 
@@ -63,13 +63,13 @@ public:
     static constexpr auto VERSION_MINOR = 4;
 
 private:
-    explicit Context(std::string_view name, int width, int height);
+    Context(std::string_view name, int width, int height);
 
     GLFWwindow* _window;
 
-    float _deltaTime{ 0.0f };
-    float _lastTime{ 0.0f };
-    float _currentTime{ 0.0f };
+    long _deltaTime{ 0l };
+    long _lastTime{ 0l };
+    long _currentTime{ 0l };
 
     struct OnPressListener {
         const std::function<void()> callback;
@@ -81,9 +81,4 @@ private:
     std::map<Key, std::function<void()>> _onLongPressListeners{};
 
     void processInputListeners();
-
-    class Factory {
-    public:
-        std::unique_ptr<Context> operator()(std::string_view name, int width, int height) const;
-    };
 };

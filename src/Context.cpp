@@ -22,16 +22,8 @@ static bool mDragging = false;
 static float mLastX = 0.0f;
 static float mLastY = 0.0f;
 
-std::unique_ptr<Context> Context::Factory::operator()(
-        const std::string_view name,
-        const int width, const int height
-) const {
-    return std::unique_ptr<Context>(new Context{ name, width, height });
-}
-
 std::unique_ptr<Context> Context::create(const std::string_view name, const int width, const int height) {
-    static constexpr auto FACTORY = Factory{};
-    return FACTORY(name, width, height);
+    return std::unique_ptr<Context>(new Context{ name, width, height });
 }
 
 Context::Context(const std::string_view name, const int width, const int height) {
@@ -123,8 +115,7 @@ void Context::setMouseDragPerpetualCallback(const std::function<void(float, floa
 }
 
 void Context::loop(const std::function<void()>& onFrame) {
-    // We make sure all the framebuffer callbacks get invoked before
-    // the rendering loop
+    // We make sure the framebuffer callback gets invoked before the rendering loop.
     int width, height;
     glfwGetFramebufferSize(_window, &width, &height);
     mFramebufferCallback(width, height);
@@ -132,7 +123,8 @@ void Context::loop(const std::function<void()>& onFrame) {
     while (!glfwWindowShouldClose(_window)) {
         static const auto START_POINT = std::chrono::high_resolution_clock::now();
         const auto currentPoint = std::chrono::high_resolution_clock::now();
-        _currentTime = std::chrono::duration<float, std::chrono::seconds::period>(currentPoint - START_POINT).count();
+        const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentPoint - START_POINT);
+        _currentTime = std::chrono::duration<long, std::milli>(duration).count();
         _deltaTime = _currentTime - _lastTime;
         _lastTime = _currentTime;
 
@@ -145,11 +137,7 @@ void Context::loop(const std::function<void()>& onFrame) {
     }
 }
 
-float Context::getCurrentTime() const {
-    return _currentTime;
-}
-
-float Context::getDeltaTime() const {
+long Context::getDeltaTimeMillis() const {
     return _deltaTime;
 }
 
