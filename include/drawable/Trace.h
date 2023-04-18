@@ -13,7 +13,7 @@ public:
     Trace& operator=(const Trace&) = delete;
     Trace& operator=(Trace&&) noexcept = delete;
 
-    class Builder final : protected Drawable::Builder {
+    class Builder final : public Drawable::Builder {
     public:
         Builder& position(float x, float y, float z);
         Builder& direction(const glm::vec3& direction);

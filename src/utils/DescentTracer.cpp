@@ -43,13 +43,29 @@ DescentTracer::Builder &DescentTracer::Builder::markColor(const float r, const f
     return *this;
 }
 
+DescentTracer::Builder &DescentTracer::Builder::usePhong(const bool enable) {
+    _usePhong = enable;
+    return *this;
+}
+
+DescentTracer::Builder &DescentTracer::Builder::traceMaterial(const phong::Material &material) {
+    _traceMaterial = material;
+    return *this;
+}
+
+DescentTracer::Builder &DescentTracer::Builder::markMaterial(const phong::Material &material) {
+    _markMaterial = material;
+    return *this;
+}
+
 std::unique_ptr<DescentTracer> DescentTracer::Builder::build() {
     if (!_objective || !_gradientX || !_gradientY) {
         throw std::runtime_error("DescentTracer: objective, gradientX, and gradientY must be set.");
     }
     return std::unique_ptr<DescentTracer>(new DescentTracer(
         std::move(_objective), std::move(_gradientX), std::move(_gradientY),
-        _traceSize, _heightPadding, _traceColor, _markColor
+        _traceSize, _heightPadding, _traceColor, _markColor,
+        _usePhong, _traceMaterial, _markMaterial
     ));
 }
 
@@ -66,13 +82,19 @@ void DescentTracer::resetTo(const float x, const float y, Scene &scene, Engine &
 
     // Create a mark at this position
     const auto norm = getNormalAt(x, y);
-    auto mark = Trace::Builder()
+    auto markBuilder = Trace::Builder()
             .position(x, y, _objective(x, y))
             .normal(norm)
             .direction(glm::vec3{ -_gradientX(x, y), -_gradientY(x, y), 0.0f })
-            .size(_traceSize)
-            .color(_markColor.r, _markColor.g, _markColor.b)
-            .build(engine);
+            .size(_traceSize);
+
+    if (_usePhong) {
+        markBuilder.shaderModel(Shader::Model::PHONG).phongMaterial(_markMaterial);
+    } else {
+        markBuilder.color(_markColor.r, _markColor.g, _markColor.b).shaderModel(Shader::Model::UNLIT);
+    }
+
+    auto mark = markBuilder.build(engine);
 
     // Pad the mark and add to the scene
     const auto tm = engine.getTransformManager();
@@ -101,13 +123,20 @@ void DescentTracer::traceTo(const float x, const float y, Scene &scene, Engine &
         const auto gradX = _gradientX(_currentX, _currentY);
         const auto gradY = _gradientY(_currentX, _currentY);
         const auto norm = -glm::normalize(glm::vec3{ gradX, gradY, -1.0f });
-        auto trace = Trace::Builder()
+
+        auto traceBuilder = Trace::Builder()
                 .position(_currentX, _currentY, _objective(_currentX, _currentY))
                 .normal(norm)
                 .direction(glm::vec3{ -gradX, -gradY, 0.0f })
-                .size(_traceSize)
-                .color(_traceColor.r, _traceColor.g, _traceColor.b)
-                .build(engine);
+                .size(_traceSize);
+
+        if (_usePhong) {
+            traceBuilder.shaderModel(Shader::Model::PHONG).phongMaterial(_traceMaterial);
+        } else {
+            traceBuilder.color(_traceColor.r, _traceColor.g, _traceColor.b).shaderModel(Shader::Model::UNLIT);
+        }
+
+        auto trace = traceBuilder.build(engine);
 
         // Pad the mark and add to the scene
         const auto tm = engine.getTransformManager();

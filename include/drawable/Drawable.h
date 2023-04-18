@@ -22,10 +22,10 @@ public:
 	class Builder {
 	public:
 		virtual ~Builder() = default;
-		Builder(const Builder&) = delete;
-		Builder(Builder&&) noexcept = delete;
-		Builder& operator=(const Builder&) = delete;
-		Builder& operator=(Builder&&) noexcept = delete;
+		Builder(const Builder&) = default;
+		Builder(Builder&&) noexcept = default;
+		Builder& operator=(const Builder&) = default;
+		Builder& operator=(Builder&&) noexcept = default;
 
 		Builder& shaderModel(Shader::Model model);
 

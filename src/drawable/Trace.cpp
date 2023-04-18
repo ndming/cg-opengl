@@ -59,6 +59,14 @@ std::unique_ptr<Drawable> Trace::Builder::build(Engine &engine) {
         _color.r, _color.g, _color.b, 1.0f,
     };
 
+    const auto normal = glm::normalize(_normal);
+    const auto normals = std::vector{
+        normal.x, normal.y, normal.z,
+        normal.x, normal.y, normal.z,
+        normal.x, normal.y, normal.z,
+        normal.x, normal.y, normal.z,
+    };
+
     const auto indices = std::vector{ 0u, 1u, 2u, 3u };
 
     constexpr auto floatSize = 4;
@@ -66,9 +74,11 @@ std::unique_ptr<Drawable> Trace::Builder::build(Engine &engine) {
         .vertexCount(static_cast<int>(positions.size() / 3))
         .attribute(0, VertexBuffer::VertexAttribute::POSITION, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
         .attribute(1, VertexBuffer::VertexAttribute::COLOR, VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
+        .attribute(2, VertexBuffer::VertexAttribute::NORMAL, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
         .build(engine);
     vertexBuffer->setBufferAt(0, positions.data());
     vertexBuffer->setBufferAt(1, colors.data());
+    vertexBuffer->setBufferAt(2, normals.data());
 
     const auto indexBuffer = IndexBuffer::Builder()
         .indexCount(static_cast<int>(indices.size()))
@@ -76,8 +86,14 @@ std::unique_ptr<Drawable> Trace::Builder::build(Engine &engine) {
         .build(engine);
     indexBuffer->setBuffer(indices.data());
 
-    shaderModel(Shader::Model::UNLIT);
     const auto shader = Shader::Builder(_shaderModel).build(engine);
+    if (_shaderModel == Shader::Model::PHONG) {
+        shader->use();
+        shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
+    }
 
     const auto entity = EntityManager::get()->create();
     RenderableManager::Builder(1)

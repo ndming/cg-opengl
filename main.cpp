@@ -137,7 +137,7 @@ int main() {
             .halfExtent(10.0f)
             .segments(100)
             .shaderModel(Shader::Model::PHONG)
-            .phongMaterial(phong::JADE)
+            .phongMaterial(phong::TURQUOISE)
             .build(*engine);
 
     // The SGD iterator
@@ -159,8 +159,9 @@ int main() {
             .gradientY(gradientY)
             .traceSize(0.1f)
             .heightPadding(0.01f)
-            .traceColor(1.0f, 1.0f, 1.0f)
-            .markColor(0.5f, 0.5f, 0.5f)
+            .usePhong(true)
+            .traceMaterial(phong::COPPER)
+            .markMaterial(phong::OBSIDIAN)
             .build();
 
     // Random the SGD state on R press
@@ -243,7 +244,7 @@ int main() {
     const auto globalLight = EntityManager::get()->create();
     LightManager::Builder(LightManager::Type::DIRECTIONAL)
             .direction(1.0f, 0.25f, -0.5f)
-            .ambient(0.08f, 0.08f, 0.08f)
+            .ambient(0.5f, 0.5f, 0.5f)
             .build(globalLight);
 
     // Render a small movable aura
