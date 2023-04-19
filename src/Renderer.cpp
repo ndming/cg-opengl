@@ -81,9 +81,10 @@ void Renderer::render(const View& view) const {
 			for (const auto light : scene->_lights) {
 				if (lightManager->_directionalLights.contains(light)) {
 					const auto& dirLight = lightManager->_directionalLights[light];
+                    const auto direction = glm::normalize(glm::vec3(normalMat * glm::vec4(dirLight->direction, 0.0f)));
 					shader->setUniform(
                         Shader::Uniform::DIRECTIONAL_LIGHT_DIRECTION,
-                        dirLight->direction.x, dirLight->direction.y, dirLight->direction.z
+                        direction.x, direction.y, direction.z
                     );
 					shader->setUniform(
                         Shader::Uniform::DIRECTIONAL_LIGHT_AMBIENT,
