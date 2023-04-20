@@ -42,6 +42,7 @@ set(SOURCES
         src/Renderer.cpp
         src/Scene.cpp
         src/Shader.cpp
+        src/Texture.cpp
         src/TransformManager.cpp
         src/VertexBuffer.cpp
         src/View.cpp

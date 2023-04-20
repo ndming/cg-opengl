@@ -15,6 +15,7 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "Shader.h"
+#include "Texture.h"
 #include "TransformManager.h"
 #include "VertexBuffer.h"
 #include "View.h"
@@ -61,6 +62,8 @@ public:
 
 	void destroyEntity(Entity entity) const;
 
+    void destroyTexture(Texture* texture);
+
 	void destroy();
 
 private:
@@ -88,7 +91,10 @@ private:
 
 	std::set<Shader*> _shaders{};
 
+    std::set<Texture*> _textures{};
+
 	friend class IndexBuffer;
 	friend class Shader;
+    friend class Texture;
 	friend class VertexBuffer;
 };

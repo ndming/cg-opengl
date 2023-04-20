@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include <glad/glad.h>
 #include <string_view>
 
-GLuint loadTexture(std::string_view path);
+#include "Engine.h"
+#include "Texture.h"
+
+Texture* loadTexture(std::string_view name, Engine& engine);

@@ -100,6 +100,10 @@ Shader::Model Shader::getModel() const {
 	return _model;
 }
 
+std::vector<std::pair<GLenum, GLuint>> Shader::getTextureBindings() const {
+    return _textureBindings;
+}
+
 void Shader::use() const {
 	glUseProgram(_program);
 }
@@ -122,4 +126,11 @@ void Shader::setUniform(const std::string_view name, const float value) const {
 void Shader::setUniform(const std::string_view name, const float x, const float y, const float z) const {
 	const auto location = glGetUniformLocation(_program, name.data());
 	glUniform3f(location, x, y, z);
+}
+
+void Shader::setUniform(const std::string_view name, const Texture &texture) {
+    const auto location = glGetUniformLocation(_program, name.data());
+    const auto texUnit = static_cast<int>(_textureBindings.size());
+    glUniform1i(location, texUnit);
+    _textureBindings.emplace_back(texture.getTarget(), texture.getNativeObject());
 }

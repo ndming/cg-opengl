@@ -130,6 +130,15 @@ void Engine::destroyEntity(const Entity entity) const {
 	}
 }
 
+void Engine::destroyTexture(Texture* const texture) {
+    if (texture) {
+        _textures.erase(texture);
+        const auto id = texture->getNativeObject();
+        glDeleteTextures(1, &id);
+        delete texture;
+    }
+}
+
 void Engine::destroy() {
 	// Destroy any remaining renderable entities
 	for (const auto& mesh : _renderableManager->_meshes | std::views::values) {
@@ -142,6 +151,14 @@ void Engine::destroy() {
 	// Destroy any remaining light entities
 	_lightManager->_directionalLights.clear();
 	_lightManager->_pointLights.clear();
+
+    // Destroy any remaining textures
+    for (const auto texture : _textures) {
+        const auto id = texture->getNativeObject();
+        glDeleteTextures(1, &id);
+        delete texture;
+    }
+    _textures.clear();
 
 	// Destroy any remaining renderer
 	for (const auto renderer : _renderers) {

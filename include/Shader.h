@@ -8,6 +8,8 @@
 #include <vector>
 #include <utility>
 
+#include "Texture.h"
+
 class Engine;
 
 class Shader {
@@ -23,6 +25,10 @@ public:
         static constexpr auto MATERIAL_DIFFUSE   = "material.diffuse";
         static constexpr auto MATERIAL_SPECULAR  = "material.specular";
         static constexpr auto MATERIAL_SHININESS = "material.shininess";
+
+        static constexpr auto TEXTURED_MATERIAL_DIFFUSE   = "texturedMaterial.diffuse";
+        static constexpr auto TEXTURED_MATERIAL_SPECULAR  = "texturedMaterial.specular";
+        static constexpr auto TEXTURED_MATERIAL_SHININESS = "texturedMaterial.shininess";
 
     private:
 		static constexpr auto MODEL      = "model";
@@ -45,6 +51,7 @@ public:
 
 		static constexpr auto ENABLED_DIRECTIONAL_LIGHT = "enabledDirectionalLight";
 		static constexpr auto ENABLED_POINT_LIGHT       = "enabledPointLight";
+        static constexpr auto ENABLED_TEXTURED_MATERIAL = "enabledTexturedMaterial";
 
         friend class Renderer;
 	};
@@ -74,15 +81,15 @@ public:
 
 	[[nodiscard]] Model getModel() const;
 
+    [[nodiscard]] std::vector<std::pair<GLenum, GLuint>> getTextureBindings() const;
+
 	void use() const;
 
 	void setUniform(std::string_view name, bool value) const;
-
 	void setUniform(std::string_view name, const float* matrix) const;
-
 	void setUniform(std::string_view name, float value) const;
-
 	void setUniform(std::string_view name, float x, float y, float z) const;
+    void setUniform(std::string_view name, const Texture& texture);
 
 private:
 	explicit Shader(const GLuint program, const Model model)
@@ -91,4 +98,6 @@ private:
 	const GLuint _program;
 
 	const Model _model;
+
+    std::vector<std::pair<GLenum, GLuint>> _textureBindings{};
 };

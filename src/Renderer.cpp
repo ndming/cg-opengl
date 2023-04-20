@@ -142,9 +142,17 @@ void Renderer::render(const View& view) const {
 			// VAO will be linked to the currently used program
 			glBindVertexArray(element->vao);
 
-			// Bind the texture before the draw call
-			// glActiveTexture(GL_TEXTURE0 + i);
-			// glBindTexture(GL_TEXTURE_2D, texture);
+			// Enable texture bindings if there are textures set for this shader
+            const auto textureBindings = shader->getTextureBindings();
+            if (shader->getModel() == Shader::Model::PHONG) {
+                shader->setUniform(Shader::Uniform::ENABLED_TEXTURED_MATERIAL, !textureBindings.empty());
+            }
+            // Bind the textures before the draw call
+            for (auto tex = 0; tex < static_cast<int>(textureBindings.size()); ++tex) {
+                glActiveTexture(GL_TEXTURE0 + tex);
+                const auto& [target, texture] = textureBindings[tex];
+                glBindTexture(target, texture);
+            }
 			
 			glDrawElements(
 				element->topology, static_cast<GLsizei>(element->count), element->indexType,
