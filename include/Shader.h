@@ -26,6 +26,8 @@ public:
         static constexpr auto MATERIAL_SPECULAR  = "material.specular";
         static constexpr auto MATERIAL_SHININESS = "material.shininess";
 
+        static constexpr auto UNLIT_TEXTURE = "unlitTexture";
+
         static constexpr auto TEXTURED_MATERIAL_DIFFUSE   = "texturedMaterial.diffuse";
         static constexpr auto TEXTURED_MATERIAL_SPECULAR  = "texturedMaterial.specular";
         static constexpr auto TEXTURED_MATERIAL_SHININESS = "texturedMaterial.shininess";
@@ -52,6 +54,7 @@ public:
 		static constexpr auto ENABLED_DIRECTIONAL_LIGHT = "enabledDirectionalLight";
 		static constexpr auto ENABLED_POINT_LIGHT       = "enabledPointLight";
         static constexpr auto ENABLED_TEXTURED_MATERIAL = "enabledTexturedMaterial";
+        static constexpr auto ENABLED_UNLIT_TEXTURE     = "enabledUnlitTexture";
 
         friend class Renderer;
 	};

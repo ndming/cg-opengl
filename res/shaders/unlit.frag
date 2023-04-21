@@ -1,9 +1,17 @@
 #version 440 core
 
-in vec4 variedColor;
+in vec4 fragColor;
+in vec2 fragUV0;
 
 out vec4 FragColor;
 
+uniform sampler2D unlitTexture;
+uniform bool enabledUnlitTexture;
+
 void main() {
-	FragColor = variedColor;
+	if (enabledUnlitTexture) {
+		FragColor = texture(unlitTexture, fragUV0);
+	} else {
+		FragColor = fragColor;
+	}
 }

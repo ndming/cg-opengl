@@ -3,12 +3,12 @@
 
 #include <vector>
 
-#include "../Engine.h"
-#include "../EntityManager.h"
-#include "../RenderableManager.h"
+#include "Engine.h"
+#include "EntityManager.h"
+#include "RenderableManager.h"
 
-#include "Tetrahedron.h"
-#include "Color.h"
+#include "drawable/Tetrahedron.h"
+#include "drawable/Color.h"
 
 std::unique_ptr<Drawable> Tetrahedron::Builder::build(Engine& engine) {
 	const auto positions = std::vector{

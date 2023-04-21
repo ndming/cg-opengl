@@ -3,12 +3,12 @@
 
 #include <vector>
 
-#include "../VertexBuffer.h"
-#include "../IndexBuffer.h"
-#include "../RenderableManager.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "RenderableManager.h"
 
-#include "Cube.h"
-#include "Color.h"
+#include "drawable/Cube.h"
+#include "drawable/Color.h"
 
 std::unique_ptr<Drawable> Cube::Builder::build(Engine& engine) {
 	const auto positions = std::vector{

@@ -6,13 +6,13 @@
 #include "Drawable.h"
 #include "Sphere.h"
 
-class Sun : public Drawable {
+class Aura : public Drawable {
 public:
-	~Sun() = default;
-	Sun(const Sun&) = delete;
-	Sun(Sun&&) noexcept = delete;
-	Sun& operator=(const Sun&) = delete;
-	Sun& operator=(Sun&&) noexcept = delete;
+	~Aura() = default;
+	Aura(const Aura&) = delete;
+	Aura(Aura&&) noexcept = delete;
+	Aura& operator=(const Aura&) = delete;
+	Aura& operator=(Aura&&) noexcept = delete;
 
 	class Builder final : protected Sphere::SubdivisionBuilder {
 	public:
@@ -25,9 +25,9 @@ public:
 	private:
 		static constexpr auto RECURSIVE_DEPTH = 2;
 
-		static constexpr auto SUN_RADIUS = 0.25f;
+		static constexpr auto AURA_RADIUS = 0.25f;
 	};
 
 private:
-	explicit Sun(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	explicit Aura(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

@@ -1,14 +1,12 @@
 // Copyright (c) 2023. Minh Nguyen
 // All rights reserved.
 
-#include <vector>
+#include "Engine.h"
+#include "EntityManager.h"
+#include "RenderableManager.h"
 
-#include "../Engine.h"
-#include "../EntityManager.h"
-#include "../RenderableManager.h"
-
-#include "Pyramid.h"
-#include "Color.h"
+#include "drawable/Pyramid.h"
+#include "drawable/Color.h"
 
 std::unique_ptr<Drawable> Pyramid::Builder::build(Engine& engine) {
 	const auto positions = std::vector{

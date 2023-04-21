@@ -19,7 +19,8 @@ public:
 	enum class LightDistance {
 		SHORT,
 		AVERAGE,
-		LARGE
+		LARGE,
+        MASSIVE
 	};
 
 	class Builder {

@@ -1,7 +1,7 @@
 // Copyright (c) 2023. Minh Nguyen
 // All rights reserved.
 
-#include "Drawable.h"
+#include "drawable/Drawable.h"
 
 Entity Drawable::getEntity() const {
 	return _entity;
@@ -53,6 +53,11 @@ Drawable::Builder &Drawable::Builder::phongMaterial(const phong::Material &mater
     phongDiffuse(material.diffuse);
     phongSpecular(material.specular);
     phongShininess(material.shininess);
+    return *this;
+}
+
+Drawable::Builder &Drawable::Builder::textureUnlit(Texture* const texture) {
+    _textureUnlit = texture;
     return *this;
 }
 

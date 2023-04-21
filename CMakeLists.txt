@@ -28,7 +28,7 @@ include_directories(external/glm/glm)
 include_directories(external/stb/include)
 
 # Add include directory
-include_directories(include include/drawable)
+include_directories(include)
 
 # Add source files
 set(SOURCES
@@ -53,14 +53,16 @@ set(SOURCES
         src/drawable/Drawable.cpp
         src/drawable/Frustum.cpp
         src/drawable/Mesh.cpp
+        src/drawable/Orbit.cpp
         src/drawable/Pyramid.cpp
         src/drawable/Sphere.cpp
-        src/drawable/Sun.cpp
+        src/drawable/Aura.cpp
         src/drawable/Tetrahedron.cpp
         src/drawable/Trace.cpp
         src/utils/DescentTracer.cpp
         src/utils/MediaExporter.cpp
         src/utils/DescentIterator.cpp
+        src/utils/SolarSystem.cpp
         src/utils/TextureLoader.cpp
         external/stb/stb_image.cpp
         external/stb/stb_image_write.cpp

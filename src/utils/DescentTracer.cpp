@@ -3,9 +3,8 @@
 
 #include <stdexcept>
 
-#include "../EntityManager.h"
-#include "Trace.h"
-
+#include "EntityManager.h"
+#include "drawable/Trace.h"
 #include "utils/DescentTracer.h"
 
 DescentTracer::Builder &DescentTracer::Builder::objective(std::function<float(float, float)> function) noexcept {

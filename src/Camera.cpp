@@ -41,6 +41,10 @@ glm::mat4 Camera::getViewMatrix() const {
 	return lookAt(pos, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f });
 }
 
+void Camera::setRadius(const float radius) {
+	_radius = glm::clamp(radius, MIN_RADIUS, MAX_RADIUS);
+}
+
 
 
 
