@@ -28,23 +28,19 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 	auto positions = std::vector<float>{};
 	auto colors = std::vector<float>{};
 	auto normals = std::vector<float>{};
+    auto texCoords = std::vector<float>{};
 
 	// top vertex
 	positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(1.0f);
-	colors.push_back(srgb::RED[0]); colors.push_back(srgb::RED[1]);
-	colors.push_back(srgb::RED[2]); colors.push_back(1.0f);
+	colors.push_back(srgb::RED[0]); colors.push_back(srgb::RED[1]); colors.push_back(srgb::RED[2]); colors.push_back(1.0f);
 	normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(1.0f);
+    texCoords.push_back(0.0f); texCoords.push_back(0.0f);
 
-	// bottom vertex
-	positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(-1.0f);
-	colors.push_back(srgb::BLUE[0]); colors.push_back(srgb::BLUE[1]);
-	colors.push_back(srgb::BLUE[2]); colors.push_back(1.0f);
-	normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(-1.0f);
-
+    // side vertices
 	for (auto i = 1; i < _latitudes; ++i) {
 		const auto theta = static_cast<float>(i) * 
 			std::numbers::pi_v<float> / static_cast<float>(_latitudes);
-		for (auto j = 0; j < _longitudes; ++j) {
+		for (auto j = 0; j <= _longitudes; ++j) {
 			const auto phi = static_cast<float>(j) * 2.0f * 
 				std::numbers::pi_v<float> / static_cast<float>(_longitudes);
 
@@ -61,45 +57,47 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 			colors.push_back(1.0f);
 
 			normals.push_back(dir.x); normals.push_back(dir.y); normals.push_back(dir.z);
+
+            const auto u = static_cast<float>(j) / static_cast<float>(_longitudes);
+            const auto v = static_cast<float>(i) / static_cast<float>(_latitudes);
+            texCoords.push_back(u); texCoords.push_back(v);
 		}
 	}
 
+    // bottom vertex
+    positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(-1.0f);
+    colors.push_back(srgb::BLUE[0]); colors.push_back(srgb::BLUE[1]); colors.push_back(srgb::BLUE[2]); colors.push_back(1.0f);
+    normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(-1.0f);
+    texCoords.push_back(0.0f); texCoords.push_back(1.0f);
+
 	constexpr auto floatSize = 4;
-	const auto vertexBuffer = VertexBuffer::Builder(3)
-		.vertexCount(static_cast<int>(positions.size()) / 3)
-		.attribute(
-			0, VertexBuffer::VertexAttribute::POSITION, 
-			VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3
-		)
-		.attribute(
-			1, VertexBuffer::VertexAttribute::NORMAL,
-			VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3
-		)
-		.attribute(
-			2, VertexBuffer::VertexAttribute::COLOR, 
-			VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4
-		)
+    const auto vertexCount = static_cast<int>(positions.size()) / 3;
+	const auto vertexBuffer = VertexBuffer::Builder(4)
+		.vertexCount(vertexCount)
+		.attribute(0, VertexBuffer::VertexAttribute::POSITION,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
+		.attribute(1, VertexBuffer::VertexAttribute::NORMAL,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
+		.attribute(2, VertexBuffer::VertexAttribute::COLOR,VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
+        .attribute(3, VertexBuffer::VertexAttribute::UV0, VertexBuffer::AttributeType::FLOAT2, 0, floatSize * 2)
 		.build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
 	vertexBuffer->setBufferAt(1, normals.data());
 	vertexBuffer->setBufferAt(2, colors.data());
-	
+    vertexBuffer->setBufferAt(3, texCoords.data());
 
 	auto stripIndices = std::vector<unsigned>{};
+    // Each pass handle two consecutive strips, and we start from the second strip, hence latitudes - 2
 	for (auto i = 0; i < _latitudes - 2; ++i) {
-		// Connection to the previous strip
+		// Connection to the previous strip, except the first strip
 		if (i > 0) {
-			stripIndices.push_back(i * _longitudes + 2);
+			stripIndices.push_back(i * (_longitudes + 1u) + 1u);
 		}
-		for (auto j = 0; j < _longitudes; ++j) {
-			stripIndices.push_back(i * _longitudes + j + 2);
-			stripIndices.push_back((i + 1) * _longitudes + j + 2);
+		for (auto j = 0; j <= _longitudes; ++j) {
+			stripIndices.push_back(i * (_longitudes + 1u) + j + 1u);
+			stripIndices.push_back((i + 1u) * (_longitudes + 1u) + j + 1u);
 		}
-		stripIndices.push_back(i * _longitudes + 2);
-		stripIndices.push_back((i + 1) * _longitudes + 2);
-		// Connection to the next strip
+		// Connection to the next strip, except the last strip
 		if (i < _latitudes - 3) {
-			stripIndices.push_back((i + 1) * _longitudes + 2);
+			stripIndices.push_back((i + 1u) * (_longitudes + 1u) + _longitudes + 1u);
 		}
 	}
 	const auto stripBuffer = IndexBuffer::Builder()
@@ -109,22 +107,19 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 	stripBuffer->setBuffer(stripIndices.data());
 
 	auto topIndices = std::vector{ 0u };
-	for (auto i = 0; i < _longitudes; ++i) {
-		topIndices.push_back(i + 2);
+	for (auto i = 0; i <= _longitudes; ++i) {
+		topIndices.push_back(i + 1);
 	}
-	topIndices.push_back(2u);
 	const auto topBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(topIndices.size()))
 		.indexType(IndexBuffer::Builder::IndexType::UINT)
 		.build(engine);
 	topBuffer->setBuffer(topIndices.data());
 
-	auto botIndices = std::vector{ 1u };
-	const auto lastDiv = _latitudes - 2;
-	for (auto i = 0; i < _longitudes; ++i) {
-		botIndices.push_back(lastDiv * _longitudes + i + 2);
+	auto botIndices = std::vector{ vertexCount - 1u };
+	for (auto i = 0; i <= _longitudes; ++i) {
+		botIndices.push_back(vertexCount - 2u - i);
 	}
-	botIndices.push_back(lastDiv * _longitudes + 2);
 	const auto botBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(botIndices.size()))
 		.indexType(IndexBuffer::Builder::IndexType::UINT)
@@ -138,24 +133,21 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
         shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
         shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
         shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
+
+        if (_textureDiffuse != nullptr && _textureSpecular != nullptr) {
+            shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_DIFFUSE, *_textureDiffuse);
+            shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_SPECULAR, *_textureSpecular);
+            shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_SHININESS, _textureShininess);
+        }
 	}
 
 	const auto entity = EntityManager::get()->create();
 	RenderableManager::Builder(3)
-		.geometry(
-			0, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *stripBuffer,
-			static_cast<int>(stripIndices.size()), 0
-		)
+		.geometry(0, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *stripBuffer,static_cast<int>(stripIndices.size()), 0)
 		.shader(0, shader)
-		.geometry(
-			1, RenderableManager::PrimitiveType::TRIANGLE_FAN, *vertexBuffer, *topBuffer,
-			static_cast<int>(topIndices.size()), 0
-		)
+		.geometry(1, RenderableManager::PrimitiveType::TRIANGLE_FAN, *vertexBuffer, *topBuffer,static_cast<int>(topIndices.size()), 0)
 		.shader(1, shader)
-		.geometry(
-			2, RenderableManager::PrimitiveType::TRIANGLE_FAN, *vertexBuffer, *botBuffer,
-			static_cast<int>(botIndices.size()), 0
-		)
+		.geometry(2, RenderableManager::PrimitiveType::TRIANGLE_FAN, *vertexBuffer, *botBuffer,static_cast<int>(botIndices.size()), 0)
 		.shader(2, shader)
 		.build(entity);
 
@@ -218,6 +210,16 @@ std::unique_ptr<Drawable> Sphere::SubdivisionBuilder::build(Engine& engine) {
 				colors.push_back(1.0f);
 			}
 		}
+
+        for (auto p = 0; p < count; ++p) {
+            const auto px = data[3 * p];
+            const auto py = data[3 * p + 1];
+            const auto pz = data[3 * p + 2];
+
+            const auto r = std::sqrt(px * px + py * py + pz * pz);
+            const auto phi = std::atan2(py, px) + std::numbers::pi_v<float>;
+            const auto theta = std::acos(pz / r);
+        }
 	}
 	delete _uniformColor;
 
@@ -230,18 +232,9 @@ std::unique_ptr<Drawable> Sphere::SubdivisionBuilder::build(Engine& engine) {
 	constexpr auto floatSize = 4;
 	const auto vertexBuffer = VertexBuffer::Builder(3)
 		.vertexCount(vertexCount)
-		.attribute(
-			0, VertexBuffer::VertexAttribute::POSITION,
-			VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3
-		)
-		.attribute(
-			1, VertexBuffer::VertexAttribute::COLOR,
-			VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4
-		)
-		.attribute(
-			2, VertexBuffer::VertexAttribute::NORMAL,
-			VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3
-		)
+		.attribute(0, VertexBuffer::VertexAttribute::POSITION,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
+		.attribute(1, VertexBuffer::VertexAttribute::COLOR,VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
+		.attribute(2, VertexBuffer::VertexAttribute::NORMAL,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
 		.build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
 	vertexBuffer->setBufferAt(1, colors.data());
@@ -264,10 +257,7 @@ std::unique_ptr<Drawable> Sphere::SubdivisionBuilder::build(Engine& engine) {
 
 	const auto entity = EntityManager::get()->create();
 	RenderableManager::Builder(1)
-		.geometry(
-			0, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *indexBuffer,
-			static_cast<int>(indices.size()), 0
-		)
+		.geometry(0, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *indexBuffer,static_cast<int>(indices.size()), 0)
 		.shader(0, shader)
 		.build(entity);
 

@@ -55,3 +55,18 @@ Drawable::Builder &Drawable::Builder::phongMaterial(const phong::Material &mater
     phongShininess(material.shininess);
     return *this;
 }
+
+Drawable::Builder &Drawable::Builder::textureDiffuse(Texture* const texture) {
+    _textureDiffuse = texture;
+    return *this;
+}
+
+Drawable::Builder &Drawable::Builder::textureSpecular(Texture* const texture) {
+    _textureSpecular = texture;
+    return *this;
+}
+
+Drawable::Builder &Drawable::Builder::textureShininess(const float shininess) {
+    _textureShininess = shininess;
+    return *this;
+}

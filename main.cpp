@@ -69,8 +69,8 @@ int main() {
         const auto data = new unsigned char[w * h * 4];
         // Load the content of the framebuffer
         Renderer::readFramebufferRgba(0, 0, w, h, data);
-        // Flip the image vertically since most images have the origin at the top left, while OpenGL expects the origin
-        // at the bottom left.
+        // OpenGL expects the 0.0 coordinate on the y-axis to be on the bottom side of the image,
+        // but images usually have 0.0 at the top of the y-axis.
         for (int y = 0; y < h / 2; y++) {
             int i1 = y * w * 4;
             int i2 = (h - y - 1) * w * 4;
@@ -111,9 +111,15 @@ int main() {
     const auto tm = engine->getTransformManager();
 
     // The rolling ball
-    const auto ball = Sphere::SubdivisionBuilder()
-            .shaderModel(Shader::Model::UNLIT)
-            .phongMaterial(phong::PEARL)
+    const auto earthDiff = loadTexture("earth/earth_diffuse.png", *engine);
+    const auto earthSpec = loadTexture("earth/earth_specular.png", *engine);
+    const auto ball = Sphere::GeographicBuilder()
+            .longitudes(60)
+            .latitudes(60)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(earthDiff)
+            .textureSpecular(earthSpec)
+            .textureShininess(100.0f)
             .build(*engine);
     static constexpr auto ballRadius = 0.4f;
     // Scale the ball down to this radius
@@ -225,7 +231,7 @@ int main() {
         tracer->resetTo(x, y, *scene, *engine);
     });
 
-    // Manually descent the ball on SPACE press
+    // Manually descent the ball on SPACE holding
     context->setOnLongPress(Context::Key::SPACE, [&]{
         // Get the current position
         const auto [prevX, prevY] = sgd->getState();
@@ -324,80 +330,15 @@ int main() {
         tm->setTransform(aura->getEntity(), trans);
     });
 
-    const auto brickDiffuse = loadTexture("brick/brick_diffuse.png", *engine);
-    const auto brickSpecular = loadTexture("brick/brick_specular.png", *engine);
-
-    const auto positions = std::vector{
-       -2.0f, -2.0f, 5.0f,
-        2.0f, -2.0f, 5.0f,
-        2.0f,  2.0f, 5.0f,
-       -2.0f,  2.0f, 5.0f,
-    };
-
-    const auto colors = std::vector{
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-    };
-
-    const auto normals = std::vector{
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-    };
-
-    const auto texCoords = std::vector{
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-    };
-
-    const auto indices = std::vector{ 0u, 1u, 2u, 2u, 3u, 0u };
-
-    constexpr auto floatSize = 4;
-    const auto vertexBuffer = VertexBuffer::Builder(4)
-            .vertexCount(4)
-            .attribute(0, VertexBuffer::VertexAttribute::POSITION, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
-            .attribute(1, VertexBuffer::VertexAttribute::COLOR, VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
-            .attribute(2, VertexBuffer::VertexAttribute::NORMAL, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
-            .attribute(3, VertexBuffer::VertexAttribute::UV0, VertexBuffer::AttributeType::FLOAT2, 0, floatSize * 2)
-            .build(*engine);
-    vertexBuffer->setBufferAt(0, positions.data());
-    vertexBuffer->setBufferAt(1, colors.data());
-    vertexBuffer->setBufferAt(2, normals.data());
-    vertexBuffer->setBufferAt(3, texCoords.data());
-
-    const auto indexBuffer = IndexBuffer::Builder()
-            .indexCount(static_cast<int>(indices.size()))
-            .indexType(IndexBuffer::Builder::IndexType::UINT)
-            .build(*engine);
-    indexBuffer->setBuffer(indices.data());
-
-    const auto shader = Shader::Builder(Shader::Model::PHONG).build(*engine);
-    shader->use();
-    shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_DIFFUSE, *brickDiffuse);
-    shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_SPECULAR, *brickSpecular);
-    shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_SHININESS, 1.0f);
-
-    const auto square = EntityManager::get()->create();
-    RenderableManager::Builder(1)
-            .geometry(0, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *indexBuffer,static_cast<int>(indices.size()), 0)
-            .shader(0, shader)
-            .build(square);
-
     // Add renderables to the scene
     scene->addEntity(ball->getEntity());
     scene->addEntity(mesh->getEntity());
     scene->addEntity(aura->getEntity());
-    scene->addEntity(square);
     scene->addEntity(pointLight);
     scene->addEntity(globalLight);
 
     // The render loop
-    context->loop([&] {
+    context->loop([&renderer, &view] {
         renderer->render(*view);
     });
 
@@ -407,8 +348,8 @@ int main() {
     engine->destroyEntity(aura->getEntity());
     engine->destroyEntity(globalLight);
     engine->destroyEntity(pointLight);
-    engine->destroyTexture(brickDiffuse);
-    engine->destroyTexture(brickSpecular);
+    engine->destroyTexture(earthDiff);
+    engine->destroyTexture(earthSpec);
     engine->destroyShader(ball->getShader());
     engine->destroyShader(mesh->getShader());
     engine->destroyShader(aura->getShader());

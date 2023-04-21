@@ -8,8 +8,9 @@
 
 #include "../EntityManager.h"
 #include "../Shader.h"
+#include "../Texture.h"
 
-#include "Material.h"
+#include "drawable/Material.h"
 
 class Drawable {
 public:
@@ -38,6 +39,10 @@ public:
         Builder& phongShininess(float shininess);
         Builder& phongMaterial(const phong::Material& material);
 
+        Builder& textureDiffuse(Texture* texture);
+        Builder& textureSpecular(Texture* texture);
+        Builder& textureShininess(float shininess);
+
 		virtual std::unique_ptr<Drawable> build(Engine& engine) = 0;
 
 	protected:
@@ -49,6 +54,10 @@ public:
         glm::vec3 _phongDiffuse{1.0f, 0.5f, 0.31f };
         glm::vec3 _phongSpecular{0.5f, 0.5f, 0.5f };
         float _phongShininess{ 32.0f };
+
+        Texture* _textureDiffuse{ nullptr };
+        Texture* _textureSpecular{ nullptr };
+        float _textureShininess{ 10.0f };
 	};
 
     [[nodiscard]] Entity getEntity() const;
