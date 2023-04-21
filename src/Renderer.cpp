@@ -54,7 +54,7 @@ void Renderer::render(const View& view) const {
 		const auto viewMat = camera->getViewMatrix();
 		const auto projMat = camera->getProjection();
 		// Compute the normal matrix to save computation resource on the GPU
-		const auto normalMat = transpose(inverse(viewMat * modelMat));
+		const auto normalMat = glm::transpose(glm::inverse(viewMat * modelMat));
 
 		const auto renderableManager = RenderableManager::getInstance();
 		const auto& mesh = renderableManager->_meshes[entity];
@@ -81,7 +81,8 @@ void Renderer::render(const View& view) const {
 			for (const auto light : scene->_lights) {
 				if (lightManager->_directionalLights.contains(light)) {
 					const auto& dirLight = lightManager->_directionalLights[light];
-                    const auto direction = glm::normalize(glm::vec3(normalMat * glm::vec4(dirLight->direction, 0.0f)));
+                    const auto lightNormalMat = glm::transpose(glm::inverse(viewMat * glm::mat4(1.0f)));
+                    const auto direction = glm::normalize(glm::vec3(lightNormalMat * glm::vec4(dirLight->direction, 0.0f)));
 					shader->setUniform(
                         Shader::Uniform::DIRECTIONAL_LIGHT_DIRECTION,
                         direction.x, direction.y, direction.z
@@ -104,11 +105,6 @@ void Renderer::render(const View& view) const {
 				else if (lightManager->_pointLights.contains(light)) {
 					const auto& pointLight = lightManager->_pointLights[light];
 
-					// Point light may have an associated transform component.
-					// auto lightModelMat = glm::mat4(1.0f);
-					// if (tcm->_transforms.contains(light)) {
-					// 	lightModelMat = tcm->_transforms[light];
-					// }
 					// The position of point light in camera space
 					const auto lightPos = viewMat * glm::vec4{ pointLight->position, 1.0f };
 
