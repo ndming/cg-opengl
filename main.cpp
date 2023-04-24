@@ -87,8 +87,8 @@ int main() {
     // Create another for the contour camera
     const auto contourCam = engine->createCamera(EntityManager::get()->create());
     contourCam->setRadius(1.0f);
-    contourCam->setTheta(0.1f);
-    contourCam->setPhi(-90.0f);
+    contourCam->setLatitudeAngle(0.0f);
+    contourCam->setLongitudeAngle(-90.0f);
 
     context->setMouseScrollCallback([&camera](const auto offsetY) {
         camera->relativeZoom(offsetY);

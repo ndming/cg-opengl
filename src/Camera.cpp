@@ -42,18 +42,13 @@ glm::mat4 Camera::getViewMatrix() const {
 }
 
 void Camera::setRadius(const float radius) {
-    _radius = radius;
+    _radius = glm::clamp(radius, MIN_RADIUS, MAX_RADIUS);
 }
 
-void Camera::setPhi(float phi) {
-    _phi = phi;
+void Camera::setLongitudeAngle(const float degree) {
+    _phi = degree;
 }
 
-void Camera::setTheta(float theta) {
-    _theta = theta;
+void Camera::setLatitudeAngle(const float degree) {
+    _theta = glm::clamp(degree, MIN_THETA, MAX_THETA);
 }
-
-
-
-
-

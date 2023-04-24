@@ -31,9 +31,9 @@ public:
 
     void setRadius(float radius);
 
-    void setPhi(float phi);
+    void setLongitudeAngle(float degree);
 
-    void setTheta(float theta);
+    void setLatitudeAngle(float degree);
 
 private:
 	explicit Camera(const Entity entity) : _entity{ entity } {}
