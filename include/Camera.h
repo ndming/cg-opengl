@@ -29,6 +29,12 @@ public:
 
 	void relativeZoom(float amount);
 
+    void setRadius(float radius);
+
+    void setPhi(float phi);
+
+    void setTheta(float theta);
+
 private:
 	explicit Camera(const Entity entity) : _entity{ entity } {}
 
