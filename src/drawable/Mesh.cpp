@@ -4,12 +4,12 @@
 #include <glm/geometric.hpp>
 #include <vector>
 
-#include "../IndexBuffer.h"
-#include "../VertexBuffer.h"
-#include "../RenderableManager.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "RenderableManager.h"
 
-#include "Mesh.h"
-#include "Color.h"
+#include "drawable/Mesh.h"
+#include "drawable/Color.h"
 
 Mesh::Builder& Mesh::Builder::halfExtentX(const float extent) {
 	_halfExtentX = extent;

@@ -89,17 +89,21 @@ void LightManager::Builder::buildPointLight(const Entity entity) const {
 
 std::array<float, 3> LightManager::Builder::resolveLightDistance() const {
 	switch (_distance) {
-	case LightDistance::SHORT:
-		// Distance of 50
-		return std::array{ 1.0f, 0.09f, 0.032f };
-	case LightDistance::LARGE:
-		// Distance of 600
-		return std::array{ 1.0f, 0.007f, 0.0002f };
-	case LightDistance::AVERAGE:
-		// Distance of 200
-		return std::array{ 1.0f, 0.022f, 0.0019f };
+        case LightDistance::SHORT:
+            // Distance of 50
+            return std::array{ 1.0f, 0.09f, 0.032f };
+        case LightDistance::AVERAGE:
+            // Distance of 200
+            return std::array{ 1.0f, 0.022f, 0.0019f };
+        case LightDistance::LARGE:
+            // Distance of 600
+            return std::array{ 1.0f, 0.007f, 0.0002f };
+        case LightDistance::MASSIVE:
+            // Distance of 3250
+            return std::array{ 1.0f, 0.0014f, 0.000007f };
+        default:
+            return { 1.0f, 0.045f, 0.0075f };
 	}
-	return { 1.0f, 0.045f, 0.0075f };
 }
 
 LightManager* LightManager::getInstance() {

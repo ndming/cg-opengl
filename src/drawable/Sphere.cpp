@@ -7,12 +7,12 @@
 #include <ranges>
 #include <vector>
 
-#include "../VertexBuffer.h"
-#include "../IndexBuffer.h"
-#include "../RenderableManager.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "RenderableManager.h"
 
-#include "Sphere.h"
-#include "Color.h"
+#include "drawable/Sphere.h"
+#include "drawable/Color.h"
 
 Sphere::GeographicBuilder& Sphere::GeographicBuilder::longitudes(const int amount) {
 	_longitudes = amount;
@@ -127,7 +127,12 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 	botBuffer->setBuffer(botIndices.data());
 
 	const auto shader = Shader::Builder(_shaderModel).build(engine);
-	if (_shaderModel == Shader::Model::PHONG) {
+    if (_shaderModel == Shader::Model::UNLIT) {
+        if (_textureUnlit != nullptr) {
+            shader->use();
+            shader->setUniform(Shader::Uniform::UNLIT_TEXTURE, *_textureUnlit);
+        }
+    } else if (_shaderModel == Shader::Model::PHONG) {
         shader->use();
         shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
         shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
@@ -210,16 +215,6 @@ std::unique_ptr<Drawable> Sphere::SubdivisionBuilder::build(Engine& engine) {
 				colors.push_back(1.0f);
 			}
 		}
-
-        for (auto p = 0; p < count; ++p) {
-            const auto px = data[3 * p];
-            const auto py = data[3 * p + 1];
-            const auto pz = data[3 * p + 2];
-
-            const auto r = std::sqrt(px * px + py * py + pz * pz);
-            const auto phi = std::atan2(py, px) + std::numbers::pi_v<float>;
-            const auto theta = std::acos(pz / r);
-        }
 	}
 	delete _uniformColor;
 

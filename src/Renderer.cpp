@@ -148,8 +148,13 @@ void Renderer::render(const View& view) const {
 
 			// Enable texture bindings if there are textures set for this shader
             const auto textureBindings = shader->getTextureBindings();
-            if (shader->getModel() == Shader::Model::PHONG) {
-                shader->setUniform(Shader::Uniform::ENABLED_TEXTURED_MATERIAL, !textureBindings.empty());
+            switch (shader->getModel()) {
+                case Shader::Model::UNLIT:
+                    shader->setUniform(Shader::Uniform::ENABLED_UNLIT_TEXTURE, !textureBindings.empty());
+                    break;
+                case Shader::Model::PHONG:
+                    shader->setUniform(Shader::Uniform::ENABLED_TEXTURED_MATERIAL, !textureBindings.empty());
+                    break;
             }
             // Bind the textures before the draw call
             for (auto tex = 0; tex < static_cast<int>(textureBindings.size()); ++tex) {

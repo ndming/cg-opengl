@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Color.h"
+#include "drawable/Color.h"
 
 namespace srgb {
 	static const auto hot = glm::vec3{ RED[0], RED[1], RED[2] };

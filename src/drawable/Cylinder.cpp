@@ -6,12 +6,12 @@
 #include <numbers>
 #include <vector>
 
-#include "../IndexBuffer.h"
-#include "../VertexBuffer.h"
-#include "../RenderableManager.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "RenderableManager.h"
 
-#include "Cylinder.h"
-#include "Color.h"
+#include "drawable/Cylinder.h"
+#include "drawable/Color.h"
 
 Cylinder::Builder& Cylinder::Builder::segments(const int segments) {
 	_segments = segments;

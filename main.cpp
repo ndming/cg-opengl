@@ -16,7 +16,7 @@
 #include "drawable/Material.h"
 #include "drawable/Mesh.h"
 #include "drawable/Sphere.h"
-#include "drawable/Sun.h"
+#include "drawable/Aura.h"
 
 #include "utils/ContourTracer.h"
 #include "utils/DescentIterator.h"
@@ -341,7 +341,7 @@ int main() {
             .position(auraPos.x, auraPos.y, auraPos.z)
             .build(pointLight);
 
-    const auto aura = Sun::Builder().build(*engine);
+    const auto aura = Aura::Builder().build(*engine);
     const auto auraTrans = translate(glm::mat4(1.0f), auraPos);
     tm->setTransform(aura->getEntity(), auraTrans);
 

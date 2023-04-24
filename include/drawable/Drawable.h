@@ -39,6 +39,8 @@ public:
         Builder& phongShininess(float shininess);
         Builder& phongMaterial(const phong::Material& material);
 
+        Builder& textureUnlit(Texture* texture);
+
         Builder& textureDiffuse(Texture* texture);
         Builder& textureSpecular(Texture* texture);
         Builder& textureShininess(float shininess);
@@ -54,6 +56,8 @@ public:
         glm::vec3 _phongDiffuse{1.0f, 0.5f, 0.31f };
         glm::vec3 _phongSpecular{0.5f, 0.5f, 0.5f };
         float _phongShininess{ 32.0f };
+
+        Texture* _textureUnlit{ nullptr };
 
         Texture* _textureDiffuse{ nullptr };
         Texture* _textureSpecular{ nullptr };

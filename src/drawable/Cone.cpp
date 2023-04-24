@@ -6,12 +6,12 @@
 #include <glm/vec3.hpp>
 #include <numbers>
 
-#include "../IndexBuffer.h"
-#include "../VertexBuffer.h"
-#include "../RenderableManager.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "RenderableManager.h"
 
-#include "Cone.h"
-#include "Color.h"
+#include "drawable/Cone.h"
+#include "drawable/Color.h"
 
 Cone::Builder& Cone::Builder::segments(const int segments) {
 	_segments = segments;

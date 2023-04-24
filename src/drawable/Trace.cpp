@@ -4,11 +4,11 @@
 #include <glm/geometric.hpp>
 #include <vector>
 
-#include "../VertexBuffer.h"
-#include "../IndexBuffer.h"
-#include "../RenderableManager.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "RenderableManager.h"
 
-#include "Trace.h"
+#include "drawable/Trace.h"
 
 Trace::Builder &Trace::Builder::position(const float x, const float y, const float z) {
     _position.x = x; _position.y = y; _position.z = z;

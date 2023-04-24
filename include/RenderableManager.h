@@ -35,6 +35,7 @@ public:
 	RenderableManager& operator=(RenderableManager&&) noexcept = delete;
 
 	enum class PrimitiveType {
+        LINE_STRIP = GL_LINE_STRIP,
 		TRIANGLES = GL_TRIANGLES,
 		TRIANGLE_STRIP = GL_TRIANGLE_STRIP,
 		TRIANGLE_FAN = GL_TRIANGLE_FAN
