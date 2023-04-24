@@ -40,6 +40,7 @@ set(SOURCES
         src/LightManager.cpp
         src/RenderableManager.cpp
         src/Renderer.cpp
+        src/Skybox.cpp
         src/Scene.cpp
         src/Shader.cpp
         src/Texture.cpp

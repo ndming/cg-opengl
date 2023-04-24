@@ -58,6 +58,13 @@ void Engine::destroyView(View* const view) {
 	}
 }
 
+void Engine::destroySkybox(Skybox* const skybox) {
+    if (skybox) {
+        _skyboxes.erase(skybox);
+        delete skybox;
+    }
+}
+
 Scene* Engine::createScene() {
 	const auto scene = new Scene();
 	_scenes.insert(scene);
@@ -172,6 +179,12 @@ void Engine::destroy() {
 	}
 	_views.clear();
 
+    // Destroy any remaining skyboxes
+    for (const auto skybox : _skyboxes) {
+        delete skybox;
+    }
+    _skyboxes.clear();
+
 	// Destroy any remaining vertex buffers
 	for (const auto& buffer : _vertexBuffers) {
 		glDeleteBuffers(buffer->getBufferCount(), buffer->_bufferObjects);
@@ -213,5 +226,3 @@ void Engine::destroy() {
 	// Destroy the transform manager
 	delete _transformManager;
 }
-
-

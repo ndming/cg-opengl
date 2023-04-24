@@ -30,3 +30,11 @@ void View::setViewport(const Viewport& viewport) {
 void View::setViewport(Viewport&& viewport) noexcept {
 	_viewport = viewport;
 }
+
+void View::setSkybox(Skybox* const skybox) {
+    _skybox = skybox;
+}
+
+Skybox *View::getSkybox() const {
+    return _skybox;
+}

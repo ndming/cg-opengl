@@ -7,6 +7,7 @@
 
 #include "Camera.h"
 #include "Scene.h"
+#include "Skybox.h"
 
 using Viewport = std::array<int, 4>;
 
@@ -32,6 +33,10 @@ public:
 
 	void setViewport(Viewport&& viewport) noexcept;
 
+    void setSkybox(Skybox* skybox);
+
+    [[nodiscard]] Skybox* getSkybox() const;
+
 private:
 	View() = default;
 
@@ -40,6 +45,8 @@ private:
 	Camera* _camera{ nullptr };
 
 	Scene* _scene{ nullptr };
+
+    Skybox* _skybox{ nullptr };
 
 	friend class Engine;
 };

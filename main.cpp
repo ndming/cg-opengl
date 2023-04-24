@@ -47,12 +47,6 @@ int main() {
     // Create a renderer
     const auto renderer = engine->createRenderer();
 
-    // Clear the color buffer
-    auto clearOptions = renderer->getClearOptions();
-    // clearOptions.clearColor = { 0.09804f, 0.14118f, 0.15686f, 1.0f };
-    clearOptions.clearColor = { 0.02f, 0.04f, 0.06f, 1.0f };
-    renderer->setClearOptions(clearOptions);
-
     // Toggle polygon mode on T press
     context->setOnPress(Context::Key::T, [&renderer] {
         renderer->togglePolygonMode();
@@ -97,6 +91,9 @@ int main() {
 
     // Create and set up a view
     const auto view = engine->createView();
+    // Create a skybox
+    const auto skybox = Skybox::Builder().color(0.02f, 0.04f, 0.06f, 1.0f).build(*engine);
+    view->setSkybox(skybox);
     view->setCamera(camera);
     view->setScene(scene);
 

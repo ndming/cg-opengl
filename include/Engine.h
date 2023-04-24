@@ -14,6 +14,7 @@
 #include "RenderableManager.h"
 #include "Renderer.h"
 #include "Scene.h"
+#include "Skybox.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "TransformManager.h"
@@ -45,6 +46,8 @@ public:
 	[[nodiscard]] View* createView();
 
 	void destroyView(View* view);
+
+    void destroySkybox(Skybox* skybox);
 
 	[[nodiscard]] Scene* createScene();
 
@@ -81,6 +84,8 @@ private:
 
 	std::set<View*> _views{};
 
+    std::set<Skybox*> _skyboxes{};
+
 	std::set<Scene*> _scenes{};
 
 	std::unordered_map<Entity, Camera*> _cameras{};
@@ -95,6 +100,7 @@ private:
 
 	friend class IndexBuffer;
 	friend class Shader;
+    friend class Skybox;
     friend class Texture;
 	friend class VertexBuffer;
 };

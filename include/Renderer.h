@@ -17,7 +17,7 @@ public:
 	Renderer& operator=(Renderer&&) = delete;
 
 	struct ClearOptions {
-		bool clear{ true };
+		bool clear{ false };
 
 		std::array<float, 4> clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
 	};

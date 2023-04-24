@@ -28,7 +28,15 @@ void Renderer::render(const View& view) const {
 		);
 		clearMask |= GL_COLOR_BUFFER_BIT;
 	}
+    if (view.getSkybox() != nullptr) {
+        const auto color = view.getSkybox()->getColor();
+        glClearColor(color[0], color[1], color[2], color[3]);
+        clearMask |= GL_COLOR_BUFFER_BIT;
+    }
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(vp[0], vp[1], vp[2], vp[3]);
 	glClear(clearMask);
+    glDisable(GL_SCISSOR_TEST);
 
 	const auto scene = view.getScene();
 	const auto camera = view.getCamera();
