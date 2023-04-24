@@ -10,12 +10,15 @@
 #include "EntityManager.h"
 #include "LightManager.h"
 #include "Shader.h"
+#include "Skybox.h"
 
+#include "drawable/Contour.h"
 #include "drawable/Material.h"
 #include "drawable/Mesh.h"
 #include "drawable/Sphere.h"
 #include "drawable/Sun.h"
 
+#include "utils/ContourTracer.h"
 #include "utils/DescentIterator.h"
 #include "utils/DescentTracer.h"
 #include "utils/MediaExporter.h"
@@ -27,6 +30,8 @@ glm::mat4 getBallTransform(
     const std::function<float(float, float)>& gradientX,
     const std::function<float(float, float)>& gradientY
 );
+
+glm::mat4 getContourBallTransform(float x, float y, float radius);
 
 static float ballAngle{ 0.0f };
 
@@ -78,12 +83,20 @@ int main() {
 
     // Create a camera
     const auto camera = engine->createCamera(EntityManager::get()->create());
+
+    // Create another for the contour camera
+    const auto contourCam = engine->createCamera(EntityManager::get()->create());
+    contourCam->setRadius(1.0f);
+    contourCam->setTheta(0.1f);
+    contourCam->setPhi(-90.0f);
+
     context->setMouseScrollCallback([&camera](const auto offsetY) {
         camera->relativeZoom(offsetY);
     });
     // Pan the camera around the looking sphere
-    context->setMouseDragPerpetualCallback([&camera](const auto offsetX, const auto offsetY) {
+    context->setMouseDragPerpetualCallback([&camera, &contourCam](const auto offsetX, const auto offsetY) {
         camera->relativeDrag(offsetX, offsetY);
+        contourCam->relativeDrag(offsetX, 0.0f);
     });
 
     // Create a scene
@@ -97,11 +110,33 @@ int main() {
     view->setCamera(camera);
     view->setScene(scene);
 
+    // Create another scene
+    const auto contourScene = engine->createScene();
+
+    // Create and set up another view
+    const auto contourView = engine->createView();
+    // Create another skybox
+    const auto contourSkybox = Skybox::Builder().color(0.09804f, 0.14118f, 0.15686f, 1.0f).build(*engine);
+    contourView->setSkybox(contourSkybox);
+    contourView->setCamera(contourCam);
+    contourView->setScene(contourScene);
+
     // Update the projection and viewport on window resize
+    constexpr auto halfExtent = 10.0f;
     context->setFramebufferCallback([&](const auto w, const auto h) {
-        const auto ratio = static_cast<float>(w) / static_cast<float>(h);
+        const auto ratio = (static_cast<float>(w) / 2.0f) / static_cast<float>(h);
         camera->setProjection(45.0f, ratio, 0.1f, 100.0f);
-        view->setViewport({ 0, 0, w, h });
+        view->setViewport({ 0, 0, w / 2, h });
+
+        const auto extent = halfExtent + 4.0f;
+        if ((w / 2) > h) {
+            const auto cRatio = (static_cast<float>(w) / 2.0f) / static_cast<float>(h);
+            contourCam->setProjection(-extent * cRatio, extent * cRatio, -extent, extent, 0.0f, 5.0f);
+        } else {
+            const auto cRatio = static_cast<float>(h) / (static_cast<float>(w) / 2.0f);
+            contourCam->setProjection(-extent, extent, -extent * cRatio, extent * cRatio, 0.0f, 5.0f);
+        }
+        contourView->setViewport({ w / 2, 0, w / 2, h });
     });
 
     // Manage all transformations
@@ -138,7 +173,7 @@ int main() {
 
     // The mesh
     const auto mesh = Mesh::Builder(objective)
-            .halfExtent(10.0f)
+            .halfExtent(halfExtent)
             .segments(100)
             .shaderModel(Shader::Model::PHONG)
             .phongMaterial(phong::TURQUOISE)
@@ -168,6 +203,31 @@ int main() {
             .markMaterial(phong::OBSIDIAN)
             .build();
 
+    // The contour map
+    const auto contour = Contour::Builder(objective)
+            .low(-1.0f)
+            .high(5.0f)
+            .halfExtent(halfExtent)
+            .segments(100)
+            .build(*engine);
+
+    const auto contourTracer = ContourTracer::Builder()
+            .gradientX(gradientX)
+            .gradientY(gradientY)
+            .traceSize(0.1f)
+            .heightPadding(0.01f)
+            .traceColor(0.0f, 0.0f, 0.0f)
+            .markColor(0.0f, 0.0f, 0.0f)
+            .build();
+
+    // The contour ball
+    const auto contourBall = Sphere::SubdivisionBuilder()
+            .uniformColor(0.0f, 0.0f, 0.0f)
+            .initialPolygon(Sphere::SubdivisionBuilder::Polyhedron::ICOSAHEDRON)
+            .build(*engine);
+    constexpr auto contourBallRadius = 0.4f;
+    tm->setTransform(contourBall->getEntity(), getContourBallTransform(0.0f, 0.0f, contourBallRadius));
+
     // Random the SGD state on R press
     context->setOnPress(Context::Key::R, [&]{
         // Random the position of the ball on the mesh
@@ -179,8 +239,12 @@ int main() {
         // Transform the ball
         const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
         tm->setTransform(ball->getEntity(), trans);
-        // Reset the tracer
+        // Transform the contour ball
+        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
+        tm->setTransform(contourBall->getEntity(), contourTrans);
+        // Reset the tracers
         tracer->resetTo(x, y, *scene, *engine);
+        contourTracer->resetTo(x, y, *contourScene, *engine);
     });
 
     // Move the ball to some interested position with Z
@@ -194,8 +258,12 @@ int main() {
         // Transform the ball
         const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
         tm->setTransform(ball->getEntity(), trans);
+        // Transform the contour ball
+        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
+        tm->setTransform(contourBall->getEntity(), contourTrans);
         // Reset the tracer
         tracer->resetTo(x, y, *scene, *engine);
+        contourTracer->resetTo(x, y, *contourScene, *engine);
     });
 
     // Move the ball to some interested position with X
@@ -209,8 +277,12 @@ int main() {
         // Transform the ball
         const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
         tm->setTransform(ball->getEntity(), trans);
+        // Transform the contour ball
+        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
+        tm->setTransform(contourBall->getEntity(), contourTrans);
         // Reset the tracer
         tracer->resetTo(x, y, *scene, *engine);
+        contourTracer->resetTo(x, y, *contourScene, *engine);
     });
 
     // Move the ball to some interested position with C
@@ -224,8 +296,12 @@ int main() {
         // Transform the ball
         const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
         tm->setTransform(ball->getEntity(), trans);
+        // Transform the contour ball
+        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
+        tm->setTransform(contourBall->getEntity(), contourTrans);
         // Reset the tracer
         tracer->resetTo(x, y, *scene, *engine);
+        contourTracer->resetTo(x, y, *contourScene, *engine);
     });
 
     // Manually descent the ball on SPACE holding
@@ -240,8 +316,12 @@ int main() {
         // Transform the ball
         const auto trans = getBallTransform(x, y, ballRadius, distance, objective, gradientX, gradientY);
         tm->setTransform(ball->getEntity(), trans);
+        // Transform the contour ball
+        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
+        tm->setTransform(contourBall->getEntity(), contourTrans);
         // Make traces
         tracer->traceTo(x, y, *scene, *engine);
+        contourTracer->traceTo(x, y, *contourScene, *engine);
     });
 
     // Add a global light
@@ -334,13 +414,18 @@ int main() {
     scene->addEntity(pointLight);
     scene->addEntity(globalLight);
 
+    contourScene->addEntity(contour->getEntity());
+    contourScene->addEntity(contourBall->getEntity());
+
     // The render loop
-    context->loop([&renderer, &view] {
+    context->loop([&] {
         renderer->render(*view);
+        renderer->render(*contourView);
     });
 
     // Destroy all resources
     engine->destroyEntity(ball->getEntity());
+    engine->destroyEntity(contourBall->getEntity());
     engine->destroyEntity(mesh->getEntity());
     engine->destroyEntity(aura->getEntity());
     engine->destroyEntity(globalLight);
@@ -348,15 +433,22 @@ int main() {
     engine->destroyTexture(earthDiff);
     engine->destroyTexture(earthSpec);
     engine->destroyShader(ball->getShader());
+    engine->destroyShader(contourBall->getShader());
     engine->destroyShader(mesh->getShader());
     engine->destroyShader(aura->getShader());
+
     engine->destroyRenderer(renderer);
     engine->destroyView(view);
+    engine->destroyView(contourView);
+    engine->destroySkybox(skybox);
+    engine->destroySkybox(contourSkybox);
     engine->destroyScene(scene);
+    engine->destroyScene(contourScene);
     engine->destroyCamera(camera->getEntity());
 
     const auto entityManager = EntityManager::get();
     entityManager->discard(ball->getEntity());
+    entityManager->discard(contourBall->getEntity());
     entityManager->discard(mesh->getEntity());
     entityManager->discard(aura->getEntity());
     entityManager->discard(globalLight);
@@ -392,6 +484,12 @@ glm::mat4 getBallTransform(
     trans *= rotationMat;
     // We first scale the ball uniformly to its radius.
     trans = glm::scale(trans, glm::vec3{ ballRadius, ballRadius, ballRadius });
+    return trans;
+}
+
+glm::mat4 getContourBallTransform(const float x, const float y, const float radius) {
+    auto trans = glm::translate(glm::mat4(1.0f), glm::vec3{ x, y, 0.0f });
+    trans = glm::scale(trans, glm::vec3{ radius, radius, radius });
     return trans;
 }
 

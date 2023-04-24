@@ -49,6 +49,7 @@ set(SOURCES
         src/View.cpp
         src/drawable/Color.cpp
         src/drawable/Cone.cpp
+        src/drawable/Contour.cpp
         src/drawable/Cube.cpp
         src/drawable/Cylinder.cpp
         src/drawable/Drawable.cpp
@@ -59,6 +60,7 @@ set(SOURCES
         src/drawable/Sun.cpp
         src/drawable/Tetrahedron.cpp
         src/drawable/Trace.cpp
+        src/utils/ContourTracer.cpp
         src/utils/DescentTracer.cpp
         src/utils/MediaExporter.cpp
         src/utils/DescentIterator.cpp

@@ -16,7 +16,7 @@ Texture* loadTexture(const std::string_view name, Engine& engine) {
     stbi_set_flip_vertically_on_load(false);
     const auto data = stbi_load(path.data(), &width, &height, &channels, 0);
     if (data) {
-        std::cout << name << ": ";
+        std::cout << "Texture: \"" << name << "\": ";
         std::cout << "width=" << width << " | height=" << height << " | channels=" << channels << '\n';
         const auto texture = Texture::Builder()
                 .width(width)

@@ -39,12 +39,12 @@ public:
 
 		SubdivisionBuilder& initialPolygon(Polyhedron polyhedron);
 
+        SubdivisionBuilder& uniformColor(float r, float g, float b);
+
 		std::unique_ptr<Drawable> build(Engine& engine) override;
 
 	protected:
 		SubdivisionBuilder& radius(float radius);
-
-		SubdivisionBuilder& uniformColor(float r, float g, float b);
 
 	private:
 		float _radius{ 1.0f };

@@ -15,7 +15,7 @@ public:
 	Mesh& operator=(const Mesh&) = delete;
 	Mesh& operator=(Mesh&&) noexcept = delete;
 
-	class Builder final : public Drawable::Builder {
+	class Builder : public Drawable::Builder {
 	public:
 		explicit Builder(std::function<float(float, float)> func) : _func{ std::move(func) } {}
 
@@ -29,7 +29,7 @@ public:
 
 		std::unique_ptr<Drawable> build(Engine& engine) override;
 
-	private:
+    protected:
 		const std::function<float(float, float)> _func;
 		float _halfExtentX{ 1.0f };
 		float _halfExtentY{ 1.0f };
