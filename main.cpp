@@ -83,6 +83,8 @@ int main() {
 
     // Create a camera
     const auto camera = engine->createCamera(EntityManager::get()->create());
+    camera->setRadius(30.0f);
+    camera->setLatitudeAngle(45.0f);
 
     // Create another for the contour camera
     const auto contourCam = engine->createCamera(EntityManager::get()->create());
@@ -332,7 +334,7 @@ int main() {
             .build(globalLight);
 
     // Render a small movable aura
-    static auto auraPos = glm::vec3{4.0f, 4.0f, 8.0f };
+    static auto auraPos = glm::vec3{8.0f, 8.0f, 8.0f };
     static constexpr auto SPEED = 5.0f;
 
     // Add a point light
