@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "Shader.h"
 
+#include "drawable/Aura.h"
 #include "drawable/Cone.h"
 #include "drawable/Cube.h"
 #include "drawable/Cylinder.h"
@@ -20,6 +21,8 @@
 #include "drawable/Tetrahedron.h"
 
 #include "utils/MediaExporter.h"
+
+inline float getAuraVelocity(long deltaTimeMillis, float speed);
 
 int main() {
     // The window context
@@ -148,6 +151,92 @@ int main() {
             .shaderModel(Shader::Model::PHONG)
             .build(*engine);
 
+    // Add light to the scene
+    const auto globalLight = EntityManager::get()->create();
+    LightManager::Builder(LightManager::Type::DIRECTIONAL)
+            .direction(1.0f, 0.25f, -0.5f)
+            .build(globalLight);
+    scene->addEntity(globalLight);
+
+    // Render a small movable aura
+    static auto auraPos = glm::vec3{0.0f, 0.0f, 5.0f };
+    static constexpr auto SPEED = 5.0f;
+
+    // Add a point light
+    const auto pointLight = EntityManager::get()->create();
+    LightManager::Builder(LightManager::Type::POINT)
+            .position(auraPos.x, auraPos.y, auraPos.z)
+            .build(pointLight);
+
+    // Manage all transformations
+    const auto tm = engine->getTransformManager();
+
+    const auto aura = Aura::Builder().build(*engine);
+    const auto auraTrans = translate(glm::mat4(1.0f), auraPos);
+    tm->setTransform(aura->getEntity(), auraTrans);
+
+    // Move the aura forward
+    context->setOnLongPress(Context::Key::W, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, 1.0f, 0.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura backward
+    context->setOnLongPress(Context::Key::S, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, -1.0f, 0.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura left
+    context->setOnLongPress(Context::Key::A, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{-1.0f, 0.0f, 0.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura right
+    context->setOnLongPress(Context::Key::D, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{1.0f, 0.0f, 0.0f} * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura up
+    context->setOnLongPress(Context::Key::LCTR, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, 0.0f, -1.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura down
+    context->setOnLongPress(Context::Key::LSHF, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, 0.0f, 1.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Snap the aura back to the initial position
+    context->setOnLongPress(Context::Key::I, [&] {
+        auraPos = glm::vec3{4.0f, 4.0f, 8.0f };
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
     scene->addEntity(cube->getEntity());
     // scene->addEntity(frustum->getEntity());
     scene->addEntity(tetra->getEntity());
@@ -157,13 +246,8 @@ int main() {
     // scene->addEntity(cone->getEntity());
     // scene->addEntity(pyramid->getEntity());
     scene->addEntity(mesh->getEntity());
-
-    // Add light to the scene
-    const auto globalLight = EntityManager::get()->create();
-    LightManager::Builder(LightManager::Type::DIRECTIONAL)
-            .direction(1.0f, 0.25f, -0.5f)
-            .build(globalLight);
-    scene->addEntity(globalLight);
+    scene->addEntity(aura->getEntity());
+    scene->addEntity(pointLight);
 
     // The render loop
     context->loop([&] { renderer->render(*view); });
@@ -172,4 +256,8 @@ int main() {
     engine->destroy();
 
     return 0;
+}
+
+inline float getAuraVelocity(const long deltaTimeMillis, const float speed) {
+    return static_cast<float>(deltaTimeMillis) / 1000.0f * speed;
 }
