@@ -151,6 +151,7 @@ int main() {
     const auto sunlight = EntityManager::get()->create();
     LightManager::Builder(LightManager::Type::POINT)
             .position(0.0f, 0.0f, 0.0f)
+            .ambient(0.1f, 0.1f, 0.1f)
             .distance(LightManager::LightDistance::MASSIVE)
             .build(sunlight);
 
