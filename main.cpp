@@ -2,11 +2,11 @@
 // All rights reserved.
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 #include "Context.h"
 #include "Engine.h"
 #include "EntityManager.h"
-#include "LightManager.h"
 #include "Renderer.h"
 #include "Shader.h"
 
@@ -20,6 +20,7 @@
 #include "drawable/Tetrahedron.h"
 
 #include "utils/MediaExporter.h"
+#include "utils/TextureLoader.h"
 
 int main() {
     // The window context
@@ -92,23 +93,31 @@ int main() {
 
     const auto tcm = engine->getTransformManager();
 
+
+    const auto brickTexture = loadTexture("brick/brick_diffuse.png", *engine);
     const auto cube = Cube::Builder()
+            .textureUnlit(brickTexture)
             .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
     const auto cubeTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, 3.0f });
     tcm->setTransform(cube->getEntity(), cubeTrans);
 
-    const auto frustum = Frustum::Builder().build(*engine);
+    const auto frustum = Frustum::Builder()
+            .build(*engine);
     const auto frustumTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, -3.0f });
     tcm->setTransform(frustum->getEntity(), frustumTrans);
 
+    const auto sunTexture = loadTexture("sun/sun_diffuse.jpg", *engine);
     const auto tetra = Tetrahedron::Builder()
             .shaderModel(Shader::Model::UNLIT)
+            .textureUnlit(sunTexture)
             .build(*engine);
     const auto tetraTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, 3.0f, 3.0f });
     tcm->setTransform(tetra->getEntity(), tetraTrans);
 
+    const auto earthTexture = loadTexture("earth/earth_diffuse.png", *engine);
     const auto geoSphere = Sphere::GeographicBuilder()
+            .textureUnlit(earthTexture)
             .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
     const auto geoSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, -3.0f, 3.0f });
@@ -135,21 +144,24 @@ int main() {
     const auto func = std::function{ [](const float x, const float y) {
         return glm::sin(x) / (x * x + 1) + glm::sin(y) / (y * y + 1);
     }};
+
+    const auto moonTexture = loadTexture("moon/moon_diffuse.jpg", *engine);
     const auto mesh = Mesh::Builder(func)
             .halfExtentX(4.0f)
             .halfExtentY(4.0f)
             .segments(100)
+            .textureUnlit(moonTexture)
             .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
 
     scene->addEntity(cube->getEntity());
-    scene->addEntity(frustum->getEntity());
+    // scene->addEntity(frustum->getEntity());
     scene->addEntity(tetra->getEntity());
     scene->addEntity(geoSphere->getEntity());
-    scene->addEntity(divSphere->getEntity());
-    scene->addEntity(cylinder->getEntity());
-    scene->addEntity(cone->getEntity());
-    scene->addEntity(pyramid->getEntity());
+    // scene->addEntity(divSphere->getEntity());
+    // scene->addEntity(cylinder->getEntity());
+    // scene->addEntity(cone->getEntity());
+    // scene->addEntity(pyramid->getEntity());
     scene->addEntity(mesh->getEntity());
 
     // The render loop
