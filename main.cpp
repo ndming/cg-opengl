@@ -34,12 +34,6 @@ int main() {
     // Create a renderer
     const auto renderer = engine->createRenderer();
 
-    // Clear the color buffer
-    auto clearOptions = renderer->getClearOptions();
-    // clearOptions.clearColor = { 0.09804f, 0.14118f, 0.15686f, 1.0f };
-    clearOptions.clearColor = { 0.0f, 0.0196f, 0.02157f, 1.0f };
-    renderer->setClearOptions(clearOptions);
-
     // Toggle polygon mode on T press
     context->setOnPress(Context::Key::T, [&renderer] {
         renderer->togglePolygonMode();
@@ -84,7 +78,7 @@ int main() {
     // Create and set up a view
     const auto view = engine->createView();
     // Create a skybox
-    const auto skybox = Skybox::Builder().color(0.02f, 0.04f, 0.06f, 1.0f).build(*engine);
+    const auto skybox = Skybox::Builder().color(0.09804f, 0.14118f, 0.15686f, 1.0f).build(*engine);
     view->setSkybox(skybox);
     view->setCamera(camera);
     view->setScene(scene);
@@ -99,7 +93,7 @@ int main() {
     const auto tcm = engine->getTransformManager();
 
     const auto cube = Cube::Builder()
-            .shaderModel(Shader::Model::PHONG)
+            .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
     const auto cubeTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, 3.0f });
     tcm->setTransform(cube->getEntity(), cubeTrans);
@@ -109,19 +103,19 @@ int main() {
     tcm->setTransform(frustum->getEntity(), frustumTrans);
 
     const auto tetra = Tetrahedron::Builder()
-            .shaderModel(Shader::Model::PHONG)
+            .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
     const auto tetraTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, 3.0f, 3.0f });
     tcm->setTransform(tetra->getEntity(), tetraTrans);
 
     const auto geoSphere = Sphere::GeographicBuilder()
-            .shaderModel(Shader::Model::PHONG)
+            .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
     const auto geoSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, -3.0f, 3.0f });
     tcm->setTransform(geoSphere->getEntity(), geoSphereTrans);
 
     const auto divSphere = Sphere::SubdivisionBuilder()
-            .shaderModel(Shader::Model::PHONG)
+            .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
     const auto divSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, -3.0f, 3.0f });
     tcm->setTransform(divSphere->getEntity(), divSphereTrans);
@@ -145,25 +139,18 @@ int main() {
             .halfExtentX(4.0f)
             .halfExtentY(4.0f)
             .segments(100)
-            .shaderModel(Shader::Model::PHONG)
+            .shaderModel(Shader::Model::UNLIT)
             .build(*engine);
 
     scene->addEntity(cube->getEntity());
-    // scene->addEntity(frustum->getEntity());
+    scene->addEntity(frustum->getEntity());
     scene->addEntity(tetra->getEntity());
     scene->addEntity(geoSphere->getEntity());
     scene->addEntity(divSphere->getEntity());
-    // scene->addEntity(cylinder->getEntity());
-    // scene->addEntity(cone->getEntity());
-    // scene->addEntity(pyramid->getEntity());
+    scene->addEntity(cylinder->getEntity());
+    scene->addEntity(cone->getEntity());
+    scene->addEntity(pyramid->getEntity());
     scene->addEntity(mesh->getEntity());
-
-    // Add light to the scene
-    const auto globalLight = EntityManager::get()->create();
-    LightManager::Builder(LightManager::Type::DIRECTIONAL)
-            .direction(1.0f, 0.25f, -0.5f)
-            .build(globalLight);
-    scene->addEntity(globalLight);
 
     // The render loop
     context->loop([&] { renderer->render(*view); });
