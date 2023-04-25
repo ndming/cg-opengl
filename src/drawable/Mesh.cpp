@@ -55,6 +55,7 @@ std::unique_ptr<Drawable> Mesh::Builder::build(Engine& engine) {
 	auto positions = std::vector<float>{};
 	auto colors = std::vector<float>{};
 	auto normals = std::vector<float>{};
+    auto texCoords = std::vector<float>{};
 
 	const auto xStep = _halfExtentX * 2 / static_cast<float>(_segmentsX);
 	const auto yStep = _halfExtentY * 2 / static_cast<float>(_segmentsY);
@@ -114,19 +115,25 @@ std::unique_ptr<Drawable> Mesh::Builder::build(Engine& engine) {
 			const auto rgb = srgb::heatColorAt(z0);
 			colors.push_back(rgb[0]); colors.push_back(rgb[1]);
 			colors.push_back(rgb[2]); colors.push_back(1.0f);
+
+            const auto u = static_cast<float>(i) / static_cast<float>(_segmentsX);
+            const auto v = static_cast<float>(j) / static_cast<float>(_segmentsY);
+            texCoords.push_back(u); texCoords.push_back(v);
 		}
 	}
 
 	constexpr auto floatSize = 4;
-	const auto vertexBuffer = VertexBuffer::Builder(3)
+	const auto vertexBuffer = VertexBuffer::Builder(4)
 		.vertexCount(static_cast<int>(positions.size() / 3))
 		.attribute(0, VertexBuffer::VertexAttribute::POSITION, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
 		.attribute(1, VertexBuffer::VertexAttribute::COLOR, VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
 		.attribute(2, VertexBuffer::VertexAttribute::NORMAL, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
-		.build(engine);
+		.attribute(3, VertexBuffer::VertexAttribute::UV0, VertexBuffer::AttributeType::FLOAT2, 0 , floatSize * 2)
+        .build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
 	vertexBuffer->setBufferAt(1, colors.data());
 	vertexBuffer->setBufferAt(2, normals.data());
+    vertexBuffer->setBufferAt(3, texCoords.data());
 
 	const auto shader = defaultShader(engine);
 	const auto entity = EntityManager::get()->create();
