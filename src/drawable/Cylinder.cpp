@@ -13,6 +13,8 @@
 #include "drawable/Cylinder.h"
 #include "drawable/Color.h"
 
+using namespace srgb;
+
 Cylinder::Builder& Cylinder::Builder::segments(const int segments) {
 	_segments = segments;
 	return *this;
@@ -28,7 +30,7 @@ std::unique_ptr<Drawable> Cylinder::Builder::build(Engine& engine) {
     // Top center vertex
     const auto topCenter = glm::vec3{ 0.0f, 0.0f, 1.0f };
     positions.push_back(topCenter.x); positions.push_back(topCenter.y); positions.push_back(topCenter.z);
-    colors.push_back(srgb::YELLOW[0]); colors.push_back(srgb::YELLOW[1]); colors.push_back(srgb::YELLOW[2]); colors.push_back(1.0f);
+    colors.push_back(YELLOW[0]); colors.push_back(YELLOW[1]); colors.push_back(YELLOW[2]); colors.push_back(1.0f);
     normals.push_back(topCenter.x); normals.push_back(topCenter.y); normals.push_back(topCenter.z);
 
 	// Construct circular vertices, doing this twice for each base circles for accurate normal mapping. This means
@@ -41,26 +43,28 @@ std::unique_ptr<Drawable> Cylinder::Builder::build(Engine& engine) {
 		// Circular vertices, repeated at the start and end for accurate texture mapping
 		for (auto j = 0; j <= _segments; ++j) {
 			// The angle of rotation
-			const auto angle = static_cast<float>(j) * 2.0f * 
-				std::numbers::pi_v<float> / static_cast<float>(_segments);
-			// Rotation vector on the XY-plane
-			const auto rot = glm::vec3{ std::cos(angle), std::sin(angle), 0.0f };
+			const auto angle = static_cast<float>(j) * 2.0f * std::numbers::pi_v<float> / static_cast<float>(_segments);
 			// The direction to the point on circle
-			const auto dir = normalize(cross(up, rot));
+			const auto dir = glm::normalize(glm::vec3{ std::cos(angle), std::sin(angle), 0.0f });
 			// Translate to that point
 			const auto point = center + dir * 1.0f;
 			positions.push_back(point.x); positions.push_back(point.y); positions.push_back(point.z);
-			colors.push_back(srgb::BROWN[0]); colors.push_back(srgb::BROWN[1]);
-			colors.push_back(srgb::BROWN[2]); colors.push_back(1.0f);
-            normals.push_back(point.x); normals.push_back(point.y); normals.push_back(point.z);
+			colors.push_back(BROWN[0]); colors.push_back(BROWN[1]); colors.push_back(BROWN[2]); colors.push_back(1.0f);
+            if (i == 0) {
+                normals.push_back(up.x); normals.push_back(up.y); normals.push_back(up.z);
+            } else if (i == 3) {
+                normals.push_back(-up.x); normals.push_back(-up.y); normals.push_back(-up.z);
+            } else {
+                normals.push_back(dir.x); normals.push_back(dir.y); normals.push_back(dir.z);
+            }
 		}
 	}
 
     // Bottom center vertex
     const auto botCenter = glm::vec3{ 0.0f, 0.0f, -1.0f };
     positions.push_back(botCenter.x); positions.push_back(botCenter.y); positions.push_back(botCenter.z);
-    colors.push_back(srgb::YELLOW[0]); colors.push_back(srgb::YELLOW[1]); colors.push_back(srgb::YELLOW[2]); colors.push_back(1.0f);
-    normals.push_back(botCenter.x); normals.push_back(botCenter.y); normals.push_back(botCenter.z);
+    colors.push_back(YELLOW[0]); colors.push_back(YELLOW[1]); colors.push_back(YELLOW[2]); colors.push_back(1.0f);
+    normals.push_back(-up.x); normals.push_back(-up.y); normals.push_back(-up.z);
 
     const auto vertexCount = static_cast<int>(positions.size() / 3);
 
