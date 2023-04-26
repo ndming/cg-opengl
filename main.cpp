@@ -15,6 +15,7 @@
 #include "drawable/Cube.h"
 #include "drawable/Cylinder.h"
 #include "drawable/Frustum.h"
+#include "drawable/Material.h"
 #include "drawable/Mesh.h"
 #include "drawable/Sphere.h"
 #include "drawable/Pyramid.h"
@@ -74,6 +75,7 @@ int main() {
 
     // Create a camera
     const auto camera = engine->createCamera(EntityManager::get()->create());
+    camera->setRadius(8.0f);
     context->setMouseScrollCallback([&camera](const auto offsetY) {
         camera->relativeZoom(offsetY);
     });
@@ -103,41 +105,59 @@ int main() {
 
     const auto cube = Cube::Builder()
             .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::JADE)
             .build(*engine);
     const auto cubeTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, 3.0f });
     tcm->setTransform(cube->getEntity(), cubeTrans);
 
-    const auto frustum = Frustum::Builder().build(*engine);
+    const auto frustum = Frustum::Builder()
+            .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::WHITE_PLASTIC)
+            .build(*engine);
     const auto frustumTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, -3.0f });
     tcm->setTransform(frustum->getEntity(), frustumTrans);
 
     const auto tetra = Tetrahedron::Builder()
             .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::GOLD)
             .build(*engine);
     const auto tetraTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, 3.0f, 3.0f });
     tcm->setTransform(tetra->getEntity(), tetraTrans);
 
     const auto geoSphere = Sphere::GeographicBuilder()
             .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::RUBY)
             .build(*engine);
     const auto geoSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, -3.0f, 3.0f });
     tcm->setTransform(geoSphere->getEntity(), geoSphereTrans);
 
     const auto divSphere = Sphere::SubdivisionBuilder()
             .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::PEARL)
             .build(*engine);
     const auto divSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, -3.0f, 3.0f });
     tcm->setTransform(divSphere->getEntity(), divSphereTrans);
 
-    const auto cylinder = Cylinder::Builder().build(*engine);
+    const auto cylinder = Cylinder::Builder()
+            .segments(80)
+            .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::EMERALD)
+            .build(*engine);
     const auto cylinderTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, -3.0f, -3.0f });
     tcm->setTransform(cylinder->getEntity(), cylinderTrans);
 
-    const auto cone = Cone::Builder().build(*engine);
+    const auto cone = Cone::Builder()
+            .segments(80)
+            .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::COPPER)
+            .build(*engine);
     const auto coneTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, -3.0f, -3.0f });
     tcm->setTransform(cone->getEntity(), coneTrans);
 
-    const auto pyramid = Pyramid::Builder().build(*engine);
+    const auto pyramid = Pyramid::Builder()
+            .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::CYAN_PLASTIC)
+            .build(*engine);
     const auto pyramidTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, 3.0f, -3.0f });
     tcm->setTransform(pyramid->getEntity(), pyramidTrans);
 
@@ -149,6 +169,7 @@ int main() {
             .halfExtentY(4.0f)
             .segments(100)
             .shaderModel(Shader::Model::PHONG)
+            .phongMaterial(phong::TURQUOISE)
             .build(*engine);
 
     // Add light to the scene
@@ -156,16 +177,16 @@ int main() {
     LightManager::Builder(LightManager::Type::DIRECTIONAL)
             .direction(1.0f, 0.25f, -0.5f)
             .build(globalLight);
-    scene->addEntity(globalLight);
 
     // Render a small movable aura
-    static auto auraPos = glm::vec3{0.0f, 0.0f, 5.0f };
+    auto auraPos = glm::vec3{6.0f, 6.0f, 8.0f };
     static constexpr auto SPEED = 5.0f;
 
     // Add a point light
     const auto pointLight = EntityManager::get()->create();
     LightManager::Builder(LightManager::Type::POINT)
             .position(auraPos.x, auraPos.y, auraPos.z)
+            .distance(LightManager::LightDistance::AVERAGE)
             .build(pointLight);
 
     // Manage all transformations
@@ -231,22 +252,23 @@ int main() {
 
     // Snap the aura back to the initial position
     context->setOnLongPress(Context::Key::I, [&] {
-        auraPos = glm::vec3{4.0f, 4.0f, 8.0f };
+        auraPos = glm::vec3{6.0f, 6.0f, 8.0f };
         engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
         const auto trans = translate(glm::mat4(1.0f), auraPos);
         tm->setTransform(aura->getEntity(), trans);
     });
 
     scene->addEntity(cube->getEntity());
-    // scene->addEntity(frustum->getEntity());
+    scene->addEntity(frustum->getEntity());
     scene->addEntity(tetra->getEntity());
     scene->addEntity(geoSphere->getEntity());
     scene->addEntity(divSphere->getEntity());
-    // scene->addEntity(cylinder->getEntity());
-    // scene->addEntity(cone->getEntity());
-    // scene->addEntity(pyramid->getEntity());
+    scene->addEntity(cylinder->getEntity());
+    scene->addEntity(cone->getEntity());
+    scene->addEntity(pyramid->getEntity());
     scene->addEntity(mesh->getEntity());
     scene->addEntity(aura->getEntity());
+    scene->addEntity(globalLight);
     scene->addEntity(pointLight);
 
     // The render loop
