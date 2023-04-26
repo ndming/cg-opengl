@@ -8,6 +8,9 @@
 #include "drawable/Frustum.h"
 #include "drawable/Color.h"
 
+using namespace srgb;
+using namespace glm;
+
 std::unique_ptr<Drawable> Frustum::Builder::build(Engine& engine) {
     const auto positions = std::vector{
         // Face +X
@@ -42,32 +45,37 @@ std::unique_ptr<Drawable> Frustum::Builder::build(Engine& engine) {
         -1.0f, -1.0f, -1.0f,
     };
 
+
+    const auto xpNorm = normalize(cross(vec3{  0.0f,  1.0f, 0.0f }, vec3{ -0.5f,  0.0f, 1.0f }));
+    const auto xnNorm = normalize(cross(vec3{  0.0f, -1.0f, 0.0f }, vec3{  0.5f,  0.0f, 1.0f }));
+    const auto ypNorm = normalize(cross(vec3{ -1.0f,  0.0f, 0.0f }, vec3{  0.0f, -0.5f, 1.0f }));
+    const auto ynNorm = normalize(cross(vec3{  1.0f,  0.0f, 0.0f }, vec3{  0.0f,  0.5f, 1.0f }));
     const auto normals = std::vector{
         // Face +X
-         1.0f,  0.0f,  0.0f,
-         1.0f,  0.0f,  0.0f,
-         1.0f,  0.0f,  0.0f,
-         1.0f,  0.0f,  0.0f,
+        xpNorm.x, xpNorm.y, xpNorm.z,
+        xpNorm.x, xpNorm.y, xpNorm.z,
+        xpNorm.x, xpNorm.y, xpNorm.z,
+        xpNorm.x, xpNorm.y, xpNorm.z,
         // Face +Y
-         0.0f,  1.0f,  0.0f,
-         0.0f,  1.0f,  0.0f,
-         0.0f,  1.0f,  0.0f,
-         0.0f,  1.0f,  0.0f,
+        ypNorm.x, ypNorm.y, ypNorm.z,
+        ypNorm.x, ypNorm.y, ypNorm.z,
+        ypNorm.x, ypNorm.y, ypNorm.z,
+        ypNorm.x, ypNorm.y, ypNorm.z,
         // Face +Z
          0.0f,  0.0f,  1.0f,
          0.0f,  0.0f,  1.0f,
          0.0f,  0.0f,  1.0f,
          0.0f,  0.0f,  1.0f,
         // Face -X
-        -1.0f,  0.0f,  0.0f,
-        -1.0f,  0.0f,  0.0f,
-        -1.0f,  0.0f,  0.0f,
-        -1.0f,  0.0f,  0.0f,
+        xnNorm.x, xnNorm.y, xnNorm.z,
+        xnNorm.x, xnNorm.y, xnNorm.z,
+        xnNorm.x, xnNorm.y, xnNorm.z,
+        xnNorm.x, xnNorm.y, xnNorm.z,
         // Face -Y
-         0.0f, -1.0f,  0.0f,
-         0.0f, -1.0f,  0.0f,
-         0.0f, -1.0f,  0.0f,
-         0.0f, -1.0f,  0.0f,
+        ynNorm.x, ynNorm.y, ynNorm.z,
+        ynNorm.x, ynNorm.y, ynNorm.z,
+        ynNorm.x, ynNorm.y, ynNorm.z,
+        ynNorm.x, ynNorm.y, ynNorm.z,
         // Face -Z
          0.0f,  0.0f, -1.0f,
          0.0f,  0.0f, -1.0f,
@@ -77,35 +85,35 @@ std::unique_ptr<Drawable> Frustum::Builder::build(Engine& engine) {
 
     const auto colors = std::vector{
         // Face X+
-        srgb::BLUE[0],	    srgb::BLUE[1],	    srgb::BLUE[2],	  1.0f,
-        srgb::BLACK[0],	    srgb::BLACK[1],	    srgb::BLACK[2],	  1.0f,
-        srgb::CYAN[0],      srgb::CYAN[1],      srgb::CYAN[2],	  1.0f,
-        srgb::GREEN[0],	    srgb::GREEN[1],		srgb::GREEN[2],	  1.0f,
+        BLUE[0],     BLUE[1],     BLUE[2],     1.0f,
+        BLACK[0],    BLACK[1],    BLACK[2],    1.0f,
+        CYAN[0],     CYAN[1],     CYAN[2],     1.0f,
+        GREEN[0],    GREEN[1],    GREEN[2],    1.0f,
         // Face Y+
-        srgb::CYAN[0],	    srgb::CYAN[1],	    srgb::CYAN[2],	  1.0f,
-        srgb::GREEN[0],	    srgb::GREEN[1],	    srgb::GREEN[2],	  1.0f,
-        srgb::WHITE[0],	    srgb::WHITE[1],	    srgb::WHITE[2],	  1.0f,
-        srgb::YELLOW[0],    srgb::YELLOW[1],    srgb::YELLOW[2],  1.0f,
+        CYAN[0],     CYAN[1],     CYAN[2],	   1.0f,
+        GREEN[0],    GREEN[1],    GREEN[2],	   1.0f,
+        WHITE[0],    WHITE[1],    WHITE[2],	   1.0f,
+        YELLOW[0],   YELLOW[1],   YELLOW[2],   1.0f,
         // Face Z+
-        srgb::WHITE[0],	    srgb::WHITE[1],	    srgb::WHITE[2],	  1.0f,
-        srgb::MAGENTA[0],   srgb::MAGENTA[1],   srgb::MAGENTA[2], 1.0f,
-        srgb::CYAN[0],	    srgb::CYAN[1],	    srgb::CYAN[2],	  1.0f,
-        srgb::BLUE[0],	    srgb::BLUE[1],	    srgb::BLUE[2],    1.0f,
+        WHITE[0],	 WHITE[1],    WHITE[2],    1.0f,
+        MAGENTA[0],  MAGENTA[1],  MAGENTA[2],  1.0f,
+        CYAN[0],     CYAN[1],     CYAN[2],     1.0f,
+        BLUE[0],     BLUE[1],     BLUE[2],     1.0f,
         // Face X-
-        srgb::WHITE[0],	    srgb::WHITE[1],	    srgb::WHITE[2],	  1.0f,
-        srgb::YELLOW[0],    srgb::YELLOW[1],    srgb::YELLOW[2],  1.0f,
-        srgb::MAGENTA[0],   srgb::MAGENTA[1],   srgb::MAGENTA[2], 1.0f,
-        srgb::RED[0],	    srgb::RED[1],	    srgb::RED[2],     1.0f,
+        WHITE[0],    WHITE[1],    WHITE[2],    1.0f,
+        YELLOW[0],   YELLOW[1],   YELLOW[2],   1.0f,
+        MAGENTA[0],  MAGENTA[1],  MAGENTA[2],  1.0f,
+        RED[0],      RED[1],      RED[2],      1.0f,
         // Face Y-
-        srgb::MAGENTA[0],   srgb::MAGENTA[1],   srgb::MAGENTA[2], 1.0f,
-        srgb::RED[0],       srgb::RED[1],       srgb::RED[2],	  1.0f,
-        srgb::BLUE[0],	    srgb::BLUE[1],      srgb::BLUE[2],	  1.0f,
-        srgb::BLACK[0],	    srgb::BLACK[1],     srgb::BLACK[2],	  1.0f,
+        MAGENTA[0],  MAGENTA[1],  MAGENTA[2],  1.0f,
+        RED[0],      RED[1],      RED[2],      1.0f,
+        BLUE[0],     BLUE[1],     BLUE[2],     1.0f,
+        BLACK[0],    BLACK[1],    BLACK[2],    1.0f,
         // Face Z-
-        srgb::GREEN[0],     srgb::GREEN[1],	    srgb::GREEN[2],	  1.0f,
-        srgb::BLACK[0],	    srgb::BLACK[1],	    srgb::BLACK[2],	  1.0f,
-        srgb::YELLOW[0],    srgb::YELLOW[1],    srgb::YELLOW[2],  1.0f,
-        srgb::RED[0],       srgb::RED[1],       srgb::RED[2],     1.0f,
+        GREEN[0],    GREEN[1],    GREEN[2],    1.0f,
+        BLACK[0],    BLACK[1],    BLACK[2],    1.0f,
+        YELLOW[0],   YELLOW[1],   YELLOW[2],   1.0f,
+        RED[0],      RED[1],      RED[2],      1.0f,
     };
 
     auto indices = std::vector<unsigned>{};
