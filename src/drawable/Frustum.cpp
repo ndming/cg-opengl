@@ -116,6 +116,39 @@ std::unique_ptr<Drawable> Frustum::Builder::build(Engine& engine) {
         RED[0],      RED[1],      RED[2],      1.0f,
     };
 
+    const auto texCoords = std::vector{
+        // Face +X
+        0.25f, 0.0f,
+        0.0f, 1.0f,
+        0.75f, 0.0f,
+        1.0f, 1.0f,
+        // Face +Y
+        0.25f, 0.0f,
+        0.0f, 1.0f,
+        0.75f, 0.0f,
+        1.0f, 1.0f,
+        // Face +Z
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        // Face -X
+        0.25f, 0.0f,
+        0.0f, 1.0f,
+        0.75f, 0.0f,
+        1.0f, 1.0f,
+        // Face -Y
+        0.25f, 0.0f,
+        0.0f, 1.0f,
+        0.75f, 0.0f,
+        1.0f, 1.0f,
+        // Face -Z
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+    };
+
     auto indices = std::vector<unsigned>{};
     for (auto i = 0; i < 6; ++i) {
         const auto it = i * 4;
@@ -124,15 +157,17 @@ std::unique_ptr<Drawable> Frustum::Builder::build(Engine& engine) {
     }
 
 	constexpr auto floatSize = 4;
-	const auto vertexBuffer = VertexBuffer::Builder(3)
+	const auto vertexBuffer = VertexBuffer::Builder(4)
 		.vertexCount(static_cast<int>(positions.size() / 3))
 		.attribute(0, VertexBuffer::VertexAttribute::POSITION,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
 		.attribute(1, VertexBuffer::VertexAttribute::COLOR,VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
 		.attribute(2, VertexBuffer::VertexAttribute::NORMAL, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
+        .attribute(3, VertexBuffer::VertexAttribute::UV0, VertexBuffer::AttributeType::FLOAT2, 0, floatSize * 2)
         .build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
 	vertexBuffer->setBufferAt(1, colors.data());
     vertexBuffer->setBufferAt(2, normals.data());
+    vertexBuffer->setBufferAt(3, texCoords.data());
 
 	const auto indexBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(indices.size()))
