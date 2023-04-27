@@ -30,13 +30,17 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 	auto normals = std::vector<float>{};
     auto texCoords = std::vector<float>{};
 
-	// top vertex
-	positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(1.0f);
-	colors.push_back(srgb::RED[0]); colors.push_back(srgb::RED[1]); colors.push_back(srgb::RED[2]); colors.push_back(1.0f);
-	normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(1.0f);
-    texCoords.push_back(0.0f); texCoords.push_back(0.0f);
+	// Top vertices. We will need more than just one top vertex for correct texture mapping.
+    for (auto i = 0; i < _longitudes; ++i) {
+        positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(1.0f);
+        colors.push_back(srgb::RED[0]); colors.push_back(srgb::RED[1]); colors.push_back(srgb::RED[2]); colors.push_back(1.0f);
+        normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(1.0f);
+        // We divide by (longitudes - 1) to make sure the final u-texCoord reach 1.0f
+        const auto u = static_cast<float>(i) / static_cast<float>(_longitudes - 1);
+        texCoords.push_back(u); texCoords.push_back(0.0f);
+    }
 
-    // side vertices
+    // Side vertices
 	for (auto i = 1; i < _latitudes; ++i) {
 		const auto theta = static_cast<float>(i) * 
 			std::numbers::pi_v<float> / static_cast<float>(_latitudes);
@@ -64,11 +68,15 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 		}
 	}
 
-    // bottom vertex
-    positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(-1.0f);
-    colors.push_back(srgb::BLUE[0]); colors.push_back(srgb::BLUE[1]); colors.push_back(srgb::BLUE[2]); colors.push_back(1.0f);
-    normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(-1.0f);
-    texCoords.push_back(0.0f); texCoords.push_back(1.0f);
+    // Bottom vertices. Again, we will need more than just one bottom vertex for correct texture mapping.
+    for (auto i = 0; i < _longitudes; ++i) {
+        positions.push_back(0.0f); positions.push_back(0.0f); positions.push_back(-1.0f);
+        colors.push_back(srgb::BLUE[0]); colors.push_back(srgb::BLUE[1]); colors.push_back(srgb::BLUE[2]); colors.push_back(1.0f);
+        normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(-1.0f);
+        // We divide by (longitudes - 1) to make sure the final u-texCoord reach 1.0f
+        const auto u = static_cast<float>(i) / static_cast<float>(_longitudes - 1);
+        texCoords.push_back(u); texCoords.push_back(1.0f);
+    }
 
 	constexpr auto floatSize = 4;
     const auto vertexCount = static_cast<int>(positions.size()) / 3;
@@ -89,15 +97,15 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 	for (auto i = 0; i < _latitudes - 2; ++i) {
 		// Connection to the previous strip, except the first strip
 		if (i > 0) {
-			stripIndices.push_back(i * (_longitudes + 1u) + 1u);
+			stripIndices.push_back(i * (_longitudes + 1u) + _longitudes);
 		}
 		for (auto j = 0; j <= _longitudes; ++j) {
-			stripIndices.push_back(i * (_longitudes + 1u) + j + 1u);
-			stripIndices.push_back((i + 1u) * (_longitudes + 1u) + j + 1u);
+			stripIndices.push_back(i * (_longitudes + 1u) + j + _longitudes);
+			stripIndices.push_back((i + 1u) * (_longitudes + 1u) + j + _longitudes);
 		}
 		// Connection to the next strip, except the last strip
 		if (i < _latitudes - 3) {
-			stripIndices.push_back((i + 1u) * (_longitudes + 1u) + _longitudes + 1u);
+			stripIndices.push_back((i + 1u) * (_longitudes + 1u) + _longitudes + _longitudes);
 		}
 	}
 	const auto stripBuffer = IndexBuffer::Builder()
@@ -106,19 +114,27 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 		.build(engine);
 	stripBuffer->setBuffer(stripIndices.data());
 
-	auto topIndices = std::vector{ 0u };
-	for (auto i = 0; i <= _longitudes; ++i) {
-		topIndices.push_back(i + 1);
-	}
+	auto topIndices = std::vector<unsigned>{};
+    for (auto i = 0; i < _longitudes; ++i) {
+        // Top vertex at longitude i
+        topIndices.push_back(i);
+        // Two more vertices that makes up the triangle, padding by longitude number of vertices
+        topIndices.push_back(i + _longitudes);
+        topIndices.push_back(i + _longitudes + 1);
+    }
 	const auto topBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(topIndices.size()))
 		.indexType(IndexBuffer::Builder::IndexType::UINT)
 		.build(engine);
 	topBuffer->setBuffer(topIndices.data());
 
-	auto botIndices = std::vector{ vertexCount - 1u };
-	for (auto i = 0; i <= _longitudes; ++i) {
-		botIndices.push_back(vertexCount - 2u - i);
+	auto botIndices = std::vector<unsigned>{};
+	for (auto i = 0; i < _longitudes; ++i) {
+        // Bottom vertex at longitude i
+        botIndices.push_back(vertexCount - 1 - i);
+        // Two more vertices that makes up the triangle, padding back by longitude number of vertices
+        botIndices.push_back(vertexCount - 1 - i - _longitudes);
+        botIndices.push_back(vertexCount - 1 - i - _longitudes - 1);
 	}
 	const auto botBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(botIndices.size()))
@@ -150,9 +166,9 @@ std::unique_ptr<Drawable> Sphere::GeographicBuilder::build(Engine& engine) {
 	RenderableManager::Builder(3)
 		.geometry(0, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *stripBuffer,static_cast<int>(stripIndices.size()), 0)
 		.shader(0, shader)
-		.geometry(1, RenderableManager::PrimitiveType::TRIANGLE_FAN, *vertexBuffer, *topBuffer,static_cast<int>(topIndices.size()), 0)
+		.geometry(1, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *topBuffer,static_cast<int>(topIndices.size()), 0)
 		.shader(1, shader)
-		.geometry(2, RenderableManager::PrimitiveType::TRIANGLE_FAN, *vertexBuffer, *botBuffer,static_cast<int>(botIndices.size()), 0)
+		.geometry(2, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *botBuffer,static_cast<int>(botIndices.size()), 0)
 		.shader(2, shader)
 		.build(entity);
 
