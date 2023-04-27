@@ -19,5 +19,5 @@ public:
 	};
 
 private:
-	explicit Pyramid(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Pyramid(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

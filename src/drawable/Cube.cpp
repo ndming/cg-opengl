@@ -120,18 +120,9 @@ std::unique_ptr<Drawable> Cube::Builder::build(Engine& engine) {
 	constexpr auto floatSize = 4;
 	const auto vertexBuffer = VertexBuffer::Builder(3)
 		.vertexCount(static_cast<int>(positions.size() / 3))
-		.attribute(
-			0, VertexBuffer::VertexAttribute::POSITION,
-			VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3
-		)
-		.attribute(
-			1, VertexBuffer::VertexAttribute::COLOR,
-			VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4
-		)
-		.attribute(
-			2, VertexBuffer::VertexAttribute::NORMAL,
-			VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3
-		)
+		.attribute(0, VertexBuffer::VertexAttribute::POSITION,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
+		.attribute(1, VertexBuffer::VertexAttribute::COLOR,VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
+		.attribute(2, VertexBuffer::VertexAttribute::NORMAL,VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
 		.build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
 	vertexBuffer->setBufferAt(1, colors.data());
@@ -143,21 +134,10 @@ std::unique_ptr<Drawable> Cube::Builder::build(Engine& engine) {
 		.build(engine);
 	indexBuffer->setBuffer(indices.data());
 
-	const auto shader = Shader::Builder(_shaderModel).build(engine);
-	if (_shaderModel == Shader::Model::PHONG) {
-        shader->use();
-        shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
-        shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
-        shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
-        shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
-	}
-
+	const auto shader = defaultShader(engine);
 	const auto entity = EntityManager::get()->create();
 	RenderableManager::Builder(1)
-		.geometry(
-			0, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *indexBuffer,
-			static_cast<int>(indices.size()), 0
-		)
+		.geometry(0, RenderableManager::PrimitiveType::TRIANGLES, *vertexBuffer, *indexBuffer,static_cast<int>(indices.size()), 0)
 		.shader(0, shader)
 		.build(entity);
 	

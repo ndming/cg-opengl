@@ -66,5 +66,5 @@ public:
 	};
 
 private:
-	explicit Sphere(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Sphere(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

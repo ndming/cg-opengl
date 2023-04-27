@@ -32,5 +32,5 @@ public:
     };
 
 private:
-    explicit Trace(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+    Trace(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

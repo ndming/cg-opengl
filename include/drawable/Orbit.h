@@ -17,10 +17,9 @@ public:
 
     class Builder final : protected Drawable::Builder {
     public:
-        Builder(
-            const std::function<float(float)>& orbitX,
-            const std::function<float(float)>& orbitY
-        ) : _orbitX{ orbitX }, _orbitY{ orbitY } {}
+        Builder(const std::function<float(float)>& orbitX, const std::function<float(float)>& orbitY)
+        : _orbitX{ orbitX }, _orbitY{ orbitY } {
+        }
 
         Builder& color(const float r, const float g, const float b) {
             _color.r = r; _color.g = g; _color.b = b;
@@ -43,5 +42,5 @@ public:
     };
 
 private:
-    explicit Orbit(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+    Orbit(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

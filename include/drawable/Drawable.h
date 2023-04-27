@@ -5,10 +5,11 @@
 
 #include <glm/vec3.hpp>
 #include <memory>
+#include <stdexcept>
 
-#include "../EntityManager.h"
-#include "../Shader.h"
-#include "../Texture.h"
+#include "EntityManager.h"
+#include "Shader.h"
+#include "Texture.h"
 
 #include "drawable/Material.h"
 
@@ -48,8 +49,19 @@ public:
 		virtual std::unique_ptr<Drawable> build(Engine& engine) = 0;
 
 	protected:
-		Builder() = default;
+        // This is required for user-defined constructors in the derived builders.
+        Builder() = default;
 
+        /**
+         * Builds an instance of the default shader using the default values set for this Drawable's Builder. The derived
+         * builders can choose to use this default shader which handles most of the shading initializations, or create a
+         * new one and initialize it on theirs own.
+         * @param engine - the Engine used for this Drawable::Builder's construction.
+         * @return The default Shader.
+         */
+        [[nodiscard]] Shader* defaultShader(Engine& engine) const;
+
+    private:
 		Shader::Model _shaderModel{ Shader::Model::UNLIT };
 
         glm::vec3 _phongAmbient{1.0f, 0.5f, 0.31f };
@@ -69,8 +81,8 @@ public:
     [[nodiscard]] Shader* getShader() const;
 
 protected:
-	explicit Drawable(const Entity entity, Shader* const shader)
-	: _entity{ entity }, _shader{ shader } {}
+	Drawable(const Entity entity, Shader* const shader) : _entity{ entity }, _shader{ shader } {
+    }
 
 private:
 	const Entity _entity;
