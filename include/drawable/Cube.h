@@ -19,6 +19,5 @@ public:
 	};
 
 private:
-	explicit Cube(const Entity entity, Shader* const shader)
-	: Drawable(entity, shader) {}
+	Cube(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

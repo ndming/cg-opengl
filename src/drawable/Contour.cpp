@@ -50,8 +50,7 @@ std::unique_ptr<Drawable> Contour::Builder::build(Engine &engine) {
     vertexBuffer->setBufferAt(1, colors.data());
 
     shaderModel(Shader::Model::UNLIT);
-    const auto shader = Shader::Builder(_shaderModel).build(engine);
-
+    const auto shader = defaultShader(engine);
     const auto entity = EntityManager::get()->create();
 
     auto renderableBuilder = RenderableManager::Builder(_segmentsY);
@@ -70,10 +69,9 @@ std::unique_ptr<Drawable> Contour::Builder::build(Engine &engine) {
                 .build(engine);
         indexBuffer->setBuffer(indices.data());
 
-        renderableBuilder.geometry(
-                i, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *indexBuffer,
-                static_cast<int>(indices.size()), 0
-        ).shader(i, shader);
+        renderableBuilder
+            .geometry(i, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *indexBuffer,static_cast<int>(indices.size()), 0)
+            .shader(i, shader);
     }
     renderableBuilder.build(entity);
 

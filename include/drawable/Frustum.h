@@ -19,5 +19,5 @@ public:
 	};
 
 private:
-	explicit Frustum(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Frustum(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

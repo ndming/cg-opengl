@@ -24,5 +24,5 @@ public:
 	};
 
 private:
-	explicit Cylinder(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Cylinder(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

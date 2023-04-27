@@ -43,7 +43,7 @@ std::unique_ptr<Drawable> Orbit::Builder::build(Engine &engine) {
     indexBuffer->setBuffer(indices.data());
 
     shaderModel(Shader::Model::UNLIT);
-    const auto shader = Shader::Builder(_shaderModel).build(engine);
+    const auto shader = defaultShader(engine);
 
     const auto entity = EntityManager::get()->create();
     RenderableManager::Builder(1)
