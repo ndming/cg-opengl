@@ -41,5 +41,5 @@ public:
 	};
 
 private:
-	explicit Mesh(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Mesh(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

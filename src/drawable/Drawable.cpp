@@ -11,6 +11,31 @@ Shader* Drawable::getShader() const {
 	return _shader;
 }
 
+Shader *Drawable::Builder::defaultShader(Engine& engine) const {
+    const auto shader = Shader::Builder(_shaderModel).build(engine);
+    if (_shaderModel == Shader::Model::UNLIT) {
+        if (_textureUnlit != nullptr) {
+            shader->use();
+            shader->setUniform(Shader::Uniform::UNLIT_TEXTURE, *_textureUnlit);
+        }
+    } else if (_shaderModel == Shader::Model::PHONG) {
+        shader->use();
+        shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
+        shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
+
+        if (_textureDiffuse != nullptr) {
+            shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_DIFFUSE, *_textureDiffuse);
+        }
+        if (_textureSpecular != nullptr) {
+            shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_SPECULAR, *_textureSpecular);
+        }
+        shader->setUniform(Shader::Uniform::TEXTURED_MATERIAL_SHININESS, _textureShininess);
+    }
+    return shader;
+}
+
 Drawable::Builder& Drawable::Builder::shaderModel(const Shader::Model model) {
 	_shaderModel = model;
 	return *this;

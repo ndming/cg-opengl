@@ -19,6 +19,5 @@ public:
 	};
 
 private:
-	explicit Tetrahedron(const Entity entity, Shader* const shader)
-	: Drawable(entity, shader) {}
+	Tetrahedron(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

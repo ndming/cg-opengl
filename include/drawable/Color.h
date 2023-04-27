@@ -7,7 +7,7 @@
 
 namespace srgb {
 	constexpr float BLACK	[]{ 0.0f, 0.0f, 0.0f };
-	constexpr float RED		[]{ 1.0f, 0.0f, 0.0f };
+	constexpr float RED     []{ 1.0f, 0.0f, 0.0f };
 	constexpr float GREEN	[]{ 0.0f, 1.0f, 0.0f };
 	constexpr float BLUE	[]{ 0.0f, 0.0f, 1.0f };
 	constexpr float YELLOW	[]{ 1.0f, 0.96863f, 0.0f};

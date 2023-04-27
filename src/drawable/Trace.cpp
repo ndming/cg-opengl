@@ -86,15 +86,7 @@ std::unique_ptr<Drawable> Trace::Builder::build(Engine &engine) {
         .build(engine);
     indexBuffer->setBuffer(indices.data());
 
-    const auto shader = Shader::Builder(_shaderModel).build(engine);
-    if (_shaderModel == Shader::Model::PHONG) {
-        shader->use();
-        shader->setUniform(Shader::Uniform::MATERIAL_AMBIENT, _phongAmbient.r, _phongAmbient.g, _phongAmbient.b);
-        shader->setUniform(Shader::Uniform::MATERIAL_DIFFUSE, _phongDiffuse.r, _phongDiffuse.g, _phongDiffuse.b);
-        shader->setUniform(Shader::Uniform::MATERIAL_SPECULAR, _phongSpecular.r, _phongSpecular.g, _phongSpecular.b);
-        shader->setUniform(Shader::Uniform::MATERIAL_SHININESS, _phongShininess);
-    }
-
+    const auto shader = defaultShader(engine);
     const auto entity = EntityManager::get()->create();
     RenderableManager::Builder(1)
         .geometry(0, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *indexBuffer,static_cast<int>(indices.size()), 0)

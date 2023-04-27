@@ -34,5 +34,5 @@ public:
     };
 
 private:
-    explicit Contour(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+    Contour(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };

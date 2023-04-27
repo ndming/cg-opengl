@@ -24,5 +24,5 @@ public:
 	};
 
 private:
-	explicit Cone(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Cone(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };
