@@ -2,7 +2,6 @@
 // All rights reserved.
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 
 #include "Context.h"
 #include "Engine.h"
@@ -10,6 +9,7 @@
 #include "Renderer.h"
 #include "Shader.h"
 
+#include "drawable/Aura.h"
 #include "drawable/Cone.h"
 #include "drawable/Cube.h"
 #include "drawable/Cylinder.h"
@@ -21,6 +21,8 @@
 
 #include "utils/MediaExporter.h"
 #include "utils/TextureLoader.h"
+
+inline float getAuraVelocity(long deltaTimeMillis, float speed);
 
 int main() {
     // The window context
@@ -66,6 +68,7 @@ int main() {
 
     // Create a camera
     const auto camera = engine->createCamera(EntityManager::get()->create());
+    camera->setRadius(10.0f);
     context->setMouseScrollCallback([&camera](const auto offsetY) {
         camera->relativeZoom(offsetY);
     });
@@ -79,7 +82,7 @@ int main() {
     // Create and set up a view
     const auto view = engine->createView();
     // Create a skybox
-    const auto skybox = Skybox::Builder().color(0.09804f, 0.14118f, 0.15686f, 1.0f).build(*engine);
+    const auto skybox = Skybox::Builder().color(0.02f, 0.04f, 0.06f, 1.0f).build(*engine);
     view->setSkybox(skybox);
     view->setCamera(camera);
     view->setScene(scene);
@@ -91,78 +94,211 @@ int main() {
         view->setViewport({ 0, 0, w, h });
     });
 
-    const auto tcm = engine->getTransformManager();
+    const auto tm = engine->getTransformManager();
 
-
-    const auto brickTexture = loadTexture("brick/brick_diffuse.png", *engine);
+    const auto cubeDiff = loadTexture("brick/brick_diffuse.jpg", *engine);
+    const auto cubeSpec = loadTexture("brick/brick_specular.jpg", *engine);
     const auto cube = Cube::Builder()
-            .textureUnlit(brickTexture)
-            .shaderModel(Shader::Model::UNLIT)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(cubeDiff)
+            .textureSpecular(cubeSpec)
+            .textureShininess(80.0f)
             .build(*engine);
     const auto cubeTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, 3.0f });
-    tcm->setTransform(cube->getEntity(), cubeTrans);
+    tm->setTransform(cube->getEntity(), cubeTrans);
 
+    const auto frustumDiff = loadTexture("wood/wood_diffuse.jpg", *engine);
+    const auto frustumSpec = loadTexture("wood/wood_specular.jpg", *engine);
     const auto frustum = Frustum::Builder()
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(frustumDiff)
+            .textureSpecular(frustumSpec)
+            .textureShininess(80.0f)
             .build(*engine);
     const auto frustumTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, 3.0f, -3.0f });
-    tcm->setTransform(frustum->getEntity(), frustumTrans);
+    tm->setTransform(frustum->getEntity(), frustumTrans);
 
-    const auto sunTexture = loadTexture("sun/sun_diffuse.jpg", *engine);
+    const auto tetraDiff = loadTexture("metal/metal_diffuse.jpg", *engine);
+    const auto tetraSpec = loadTexture("metal/metal_specular.jpg", *engine);
     const auto tetra = Tetrahedron::Builder()
-            .shaderModel(Shader::Model::UNLIT)
-            .textureUnlit(sunTexture)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(tetraDiff)
+            .textureSpecular(tetraSpec)
+            .textureShininess(80.0f)
             .build(*engine);
     const auto tetraTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, 3.0f, 3.0f });
-    tcm->setTransform(tetra->getEntity(), tetraTrans);
+    tm->setTransform(tetra->getEntity(), tetraTrans);
 
-    const auto earthTexture = loadTexture("earth/earth_diffuse.png", *engine);
+    const auto sphereDiff = loadTexture("earth/earth_diffuse.png", *engine);
+    const auto sphereSpec = loadTexture("earth/earth_specular.png", *engine);
     const auto geoSphere = Sphere::GeographicBuilder()
-            .textureUnlit(earthTexture)
-            .shaderModel(Shader::Model::UNLIT)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(sphereDiff)
+            .textureSpecular(sphereSpec)
+            .textureShininess(80.0f)
             .build(*engine);
     const auto geoSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, -3.0f, 3.0f });
-    tcm->setTransform(geoSphere->getEntity(), geoSphereTrans);
+    tm->setTransform(geoSphere->getEntity(), geoSphereTrans);
 
-    const auto divSphere = Sphere::SubdivisionBuilder()
-            .shaderModel(Shader::Model::UNLIT)
+    const auto ellipsoidDiff = loadTexture("stone/stone_diffuse.jpg", *engine);
+    const auto ellipsoidSpec = loadTexture("stone/stone_specular.jpg", *engine);
+    const auto ellipsoid = Sphere::GeographicBuilder()
+            .latitudes(60)
+            .longitudes(60)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(ellipsoidDiff)
+            .textureSpecular(ellipsoidSpec)
+            .textureShininess(80.0f)
             .build(*engine);
-    const auto divSphereTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, -3.0f, 3.0f });
-    tcm->setTransform(divSphere->getEntity(), divSphereTrans);
+    auto ellipsoidTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, -3.0f, 3.0f });
+    ellipsoidTrans = glm::scale(ellipsoidTrans, glm::vec3{ 1.0f, 1.5f, 0.8f });
+    tm->setTransform(ellipsoid->getEntity(), ellipsoidTrans);
 
-    const auto cylinder = Cylinder::Builder().build(*engine);
+    const auto cylinderDiff = loadTexture("rust/rust_diffuse.jpg", *engine);
+    const auto cylinderSpec = loadTexture("rust/rust_specular.jpg", *engine);
+    const auto cylinder = Cylinder::Builder()
+            .segments(80)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(cylinderDiff)
+            .textureSpecular(cylinderSpec)
+            .textureShininess(80.0f)
+            .build(*engine);
     const auto cylinderTrans = translate(glm::mat4(1.0f), glm::vec3{ 3.0f, -3.0f, -3.0f });
-    tcm->setTransform(cylinder->getEntity(), cylinderTrans);
+    tm->setTransform(cylinder->getEntity(), cylinderTrans);
 
-    const auto cone = Cone::Builder().build(*engine);
+    const auto coneDiff = loadTexture("plaster/plaster_diffuse.jpg", *engine);
+    const auto coneSpec = loadTexture("plaster/plaster_specular.jpg", *engine);
+    const auto cone = Cone::Builder()
+            .segments(80)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(coneDiff)
+            .textureSpecular(coneSpec)
+            .textureShininess(80.0f)
+            .build(*engine);
     const auto coneTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, -3.0f, -3.0f });
-    tcm->setTransform(cone->getEntity(), coneTrans);
+    tm->setTransform(cone->getEntity(), coneTrans);
 
-    const auto pyramid = Pyramid::Builder().build(*engine);
+    const auto pyramidDiff = loadTexture("rock/rock_diffuse.jpg", *engine);
+    const auto pyramidSpec = loadTexture("rock/rock_specular.jpg", *engine);
+    const auto pyramid = Pyramid::Builder()
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(pyramidDiff)
+            .textureSpecular(pyramidSpec)
+            .textureShininess(80.0f)
+            .build(*engine);
     const auto pyramidTrans = translate(glm::mat4(1.0f), glm::vec3{ -3.0f, 3.0f, -3.0f });
-    tcm->setTransform(pyramid->getEntity(), pyramidTrans);
+    tm->setTransform(pyramid->getEntity(), pyramidTrans);
 
     const auto func = std::function{ [](const float x, const float y) {
         return glm::sin(x) / (x * x + 1) + glm::sin(y) / (y * y + 1);
     }};
 
-    const auto moonTexture = loadTexture("moon/moon_diffuse.jpg", *engine);
+    const auto meshDiff = loadTexture("terrazzo/terrazzo_diffuse.png", *engine);
+    const auto meshSpec = loadTexture("terrazzo/terrazzo_specular.png", *engine);
     const auto mesh = Mesh::Builder(func)
             .halfExtentX(4.0f)
             .halfExtentY(4.0f)
-            .segments(100)
-            .textureUnlit(moonTexture)
-            .shaderModel(Shader::Model::UNLIT)
+            .segments(60)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(meshDiff)
+            .textureSpecular(meshSpec)
+            .textureShininess(80.0f)
             .build(*engine);
 
+    const auto globalLight = EntityManager::get()->create();
+    LightManager::Builder(LightManager::Type::DIRECTIONAL)
+            .direction(1.0f, 0.5f, -0.8f)
+            .build(globalLight);
+
+    // Render a small movable aura
+    const auto auraInitialPos = glm::vec3{6.0f, 6.0f, 10.0f };
+    static auto auraPos = auraInitialPos;
+    static constexpr auto SPEED = 5.0f;
+
+    // Add a point light
+    const auto pointLight = EntityManager::get()->create();
+    LightManager::Builder(LightManager::Type::POINT)
+            .position(auraPos.x, auraPos.y, auraPos.z)
+            .build(pointLight);
+
+    const auto aura = Aura::Builder().build(*engine);
+    const auto auraTrans = translate(glm::mat4(1.0f), auraPos);
+    tm->setTransform(aura->getEntity(), auraTrans);
+
+    // Move the aura forward
+    context->setOnLongPress(Context::Key::W, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, 1.0f, 0.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura backward
+    context->setOnLongPress(Context::Key::S, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, -1.0f, 0.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura left
+    context->setOnLongPress(Context::Key::A, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{-1.0f, 0.0f, 0.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura right
+    context->setOnLongPress(Context::Key::D, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{1.0f, 0.0f, 0.0f} * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura up
+    context->setOnLongPress(Context::Key::LCTR, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, 0.0f, -1.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Move the aura down
+    context->setOnLongPress(Context::Key::LSHF, [&] {
+        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
+        auraPos += glm::vec3{0.0f, 0.0f, 1.0f } * velocity;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
+    // Snap the aura back to the initial position
+    context->setOnLongPress(Context::Key::I, [&] {
+        auraPos = auraInitialPos;
+        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
+        const auto trans = translate(glm::mat4(1.0f), auraPos);
+        tm->setTransform(aura->getEntity(), trans);
+    });
+
     scene->addEntity(cube->getEntity());
-    // scene->addEntity(frustum->getEntity());
+    scene->addEntity(frustum->getEntity());
     scene->addEntity(tetra->getEntity());
     scene->addEntity(geoSphere->getEntity());
-    // scene->addEntity(divSphere->getEntity());
-    // scene->addEntity(cylinder->getEntity());
-    // scene->addEntity(cone->getEntity());
-    // scene->addEntity(pyramid->getEntity());
+    scene->addEntity(ellipsoid->getEntity());
+    scene->addEntity(cylinder->getEntity());
+    scene->addEntity(cone->getEntity());
+    scene->addEntity(pyramid->getEntity());
     scene->addEntity(mesh->getEntity());
+    scene->addEntity(globalLight);
+    scene->addEntity(aura->getEntity());
+    scene->addEntity(pointLight);
 
     // The render loop
     context->loop([&] { renderer->render(*view); });
@@ -171,4 +307,8 @@ int main() {
     engine->destroy();
 
     return 0;
+}
+
+inline float getAuraVelocity(const long deltaTimeMillis, const float speed) {
+    return static_cast<float>(deltaTimeMillis) / 1000.0f * speed;
 }
