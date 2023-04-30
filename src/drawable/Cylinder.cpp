@@ -24,6 +24,7 @@ std::unique_ptr<Drawable> Cylinder::Builder::build(Engine& engine) {
 	auto positions = std::vector<float>{};
 	auto colors = std::vector<float>{};
     auto normals = std::vector<float>{};
+    auto texCoords = std::vector<float>{};
 
 	const auto up = glm::vec3{ 0.0f, 0.0f, 1.0f };
 
@@ -32,30 +33,40 @@ std::unique_ptr<Drawable> Cylinder::Builder::build(Engine& engine) {
     positions.push_back(topCenter.x); positions.push_back(topCenter.y); positions.push_back(topCenter.z);
     colors.push_back(YELLOW[0]); colors.push_back(YELLOW[1]); colors.push_back(YELLOW[2]); colors.push_back(1.0f);
     normals.push_back(topCenter.x); normals.push_back(topCenter.y); normals.push_back(topCenter.z);
+    texCoords.push_back(0.5f); texCoords.push_back(0.5f);
 
 	// Construct circular vertices, doing this twice for each base circles for accurate normal mapping. This means
     // we are looping around 4 times
 	for (auto i = 0; i < 4; ++i) {
 		// The actual center, for transform reference only
-        const auto multiplier = i / 2;
+        const auto multiplier = i / 2; // will be either 0 or 1
 		const auto center = topCenter - up * (2.0f * static_cast<float>(multiplier));
 
 		// Circular vertices, repeated at the start and end for accurate texture mapping
 		for (auto j = 0; j <= _segments; ++j) {
 			// The angle of rotation
-			const auto angle = static_cast<float>(j) * 2.0f * std::numbers::pi_v<float> / static_cast<float>(_segments);
+			const auto angle = 2.0f * std::numbers::pi_v<float> * static_cast<float>(j) / static_cast<float>(_segments);
 			// The direction to the point on circle
 			const auto dir = glm::normalize(glm::vec3{ std::cos(angle), std::sin(angle), 0.0f });
 			// Translate to that point
 			const auto point = center + dir * 1.0f;
 			positions.push_back(point.x); positions.push_back(point.y); positions.push_back(point.z);
 			colors.push_back(BROWN[0]); colors.push_back(BROWN[1]); colors.push_back(BROWN[2]); colors.push_back(1.0f);
-            if (i == 0) {
-                normals.push_back(up.x); normals.push_back(up.y); normals.push_back(up.z);
-            } else if (i == 3) {
-                normals.push_back(-up.x); normals.push_back(-up.y); normals.push_back(-up.z);
+
+            if (i == 0 || i == 3) {
+                if (i == 0) {
+                    normals.push_back(up.x); normals.push_back(up.y); normals.push_back(up.z);
+                } else {
+                    normals.push_back(-up.x); normals.push_back(-up.y); normals.push_back(-up.z);
+                }
+                const auto u = 0.5f + 0.5f * std::cos(angle);
+                const auto v = 0.5f + 0.5f * std::sin(angle);
+                texCoords.push_back(u); texCoords.push_back(v);
             } else {
                 normals.push_back(dir.x); normals.push_back(dir.y); normals.push_back(dir.z);
+                const auto u = static_cast<float>(j) / static_cast<float>(_segments);
+                const auto v = static_cast<float>(multiplier);
+                texCoords.push_back(u); texCoords.push_back(v);
             }
 		}
 	}
@@ -65,6 +76,7 @@ std::unique_ptr<Drawable> Cylinder::Builder::build(Engine& engine) {
     positions.push_back(botCenter.x); positions.push_back(botCenter.y); positions.push_back(botCenter.z);
     colors.push_back(YELLOW[0]); colors.push_back(YELLOW[1]); colors.push_back(YELLOW[2]); colors.push_back(1.0f);
     normals.push_back(-up.x); normals.push_back(-up.y); normals.push_back(-up.z);
+    texCoords.push_back(0.5f); texCoords.push_back(0.5f);
 
     const auto vertexCount = static_cast<int>(positions.size() / 3);
 
@@ -85,15 +97,17 @@ std::unique_ptr<Drawable> Cylinder::Builder::build(Engine& engine) {
 	}
 
 	constexpr auto floatSize = 4;
-	const auto vertexBuffer = VertexBuffer::Builder(3)
+	const auto vertexBuffer = VertexBuffer::Builder(4)
 		.vertexCount(vertexCount)
 		.attribute(0, VertexBuffer::VertexAttribute::POSITION, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
 		.attribute(1, VertexBuffer::VertexAttribute::COLOR, VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
 		.attribute(2, VertexBuffer::VertexAttribute::NORMAL, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
+        .attribute(3, VertexBuffer::VertexAttribute::UV0, VertexBuffer::AttributeType::FLOAT2, 0, floatSize * 2)
         .build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
 	vertexBuffer->setBufferAt(1, colors.data());
     vertexBuffer->setBufferAt(2, normals.data());
+    vertexBuffer->setBufferAt(3, texCoords.data());
 
 	const auto topBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(topIndices.size()))
