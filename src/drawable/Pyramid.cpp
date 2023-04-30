@@ -36,7 +36,6 @@ std::unique_ptr<Drawable> Pyramid::Builder::build(Engine& engine) {
          1.0f,  1.0f, -1.0f,
     };
 
-
     const auto xpNorm = normalize(cross(vec3{  0.0f,  1.0f, 0.0f }, vec3{ -1.0f,  0.0f, 1.0f }));
     const auto xnNorm = normalize(cross(vec3{  0.0f, -1.0f, 0.0f }, vec3{  1.0f,  0.0f, 1.0f }));
     const auto ypNorm = normalize(cross(vec3{ -1.0f,  0.0f, 0.0f }, vec3{  0.0f, -1.0f, 1.0f }));
@@ -89,6 +88,29 @@ std::unique_ptr<Drawable> Pyramid::Builder::build(Engine& engine) {
         BLUE[0],     BLUE[1],     BLUE[2],     1.0f,
     };
 
+    const auto texCoords = std::vector{
+        0.5f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+
+        0.5f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+
+        0.5f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+
+        0.5f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f
+    };
+
     // Draw 4 triangles first, then draw the base square
     const auto vertexCount = 4 * 3 + 4;
     auto indices = std::vector<unsigned>{};
@@ -97,15 +119,17 @@ std::unique_ptr<Drawable> Pyramid::Builder::build(Engine& engine) {
     }
 
 	constexpr auto floatSize = 4;
-	const auto vertexBuffer = VertexBuffer::Builder(3)
+	const auto vertexBuffer = VertexBuffer::Builder(4)
 		.vertexCount(vertexCount)
 		.attribute(0, VertexBuffer::VertexAttribute::POSITION, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
 		.attribute(1, VertexBuffer::VertexAttribute::NORMAL, VertexBuffer::AttributeType::FLOAT3, 0, floatSize * 3)
         .attribute(2, VertexBuffer::VertexAttribute::COLOR, VertexBuffer::AttributeType::FLOAT4, 0, floatSize * 4)
+        .attribute(3, VertexBuffer::VertexAttribute::UV0, VertexBuffer::AttributeType::FLOAT2, 0, floatSize * 2)
 		.build(engine);
 	vertexBuffer->setBufferAt(0, positions.data());
     vertexBuffer->setBufferAt(1, normals.data());
 	vertexBuffer->setBufferAt(2, colors.data());
+    vertexBuffer->setBufferAt(3, texCoords.data());
 
 	const auto indexBuffer = IndexBuffer::Builder()
 		.indexCount(static_cast<int>(indices.size()))
