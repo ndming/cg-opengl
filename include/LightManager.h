@@ -20,7 +20,8 @@ public:
 		SHORT,
 		AVERAGE,
 		LARGE,
-        MASSIVE
+        MASSIVE,
+        SUPER_MASSIVE
 	};
 
 	class Builder {
