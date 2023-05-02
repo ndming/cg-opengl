@@ -10,13 +10,13 @@ Entity Camera::getEntity() const {
 }
 
 void Camera::relativeDrag(const float offsetX, const float offsetY) {
-	_phi -= offsetX * DRAG_SENSITIVE;
-	_theta -= offsetY * DRAG_SENSITIVE;
+	_phi -= offsetX * _dragSensitive;
+	_theta -= offsetY * _dragSensitive;
 	_theta = glm::clamp(_theta, MIN_THETA, MAX_THETA);
 }
 
 void Camera::relativeZoom(const float amount) {
-	_radius -= amount * ZOOM_SENSITIVE;
+	_radius -= amount * _zoomSensitive;
 	_radius = glm::clamp(_radius, MIN_RADIUS, MAX_RADIUS);
 }
 
@@ -43,6 +43,14 @@ glm::mat4 Camera::getViewMatrix() const {
 
 void Camera::setRadius(const float radius) {
 	_radius = glm::clamp(radius, MIN_RADIUS, MAX_RADIUS);
+}
+
+void Camera::setZoomSensitive(const float sensitive) {
+    _zoomSensitive = sensitive;
+}
+
+void Camera::setDragSensitive(const float sensitive) {
+    _dragSensitive = sensitive;
 }
 
 
