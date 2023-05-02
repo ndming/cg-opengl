@@ -382,6 +382,9 @@ int main() {
     scene->addEntity(moon->getEntity());
     scene->addEntity(moonOrbit->getEntity());
 
+    // A temporary workaround to make the orbits less jagged
+    glLineWidth(1.5f);
+
     // The render loop
     context->loop([&] {
         const auto delta = context->getDeltaTimeMillis();
