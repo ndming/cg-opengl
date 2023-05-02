@@ -101,6 +101,8 @@ std::array<float, 3> LightManager::Builder::resolveLightDistance() const {
         case LightDistance::MASSIVE:
             // Distance of 3250
             return std::array{ 1.0f, 0.0014f, 0.000007f };
+        case LightDistance::SUPER_MASSIVE:
+            return std::array{ 1.0f, 0.00035f, 0.00000175f };
         default:
             return { 1.0f, 0.045f, 0.0075f };
 	}
