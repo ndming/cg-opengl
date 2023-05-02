@@ -35,6 +35,10 @@ public:
 
     void setLatitudeAngle(float degree);
 
+    void setZoomSensitive(float sensitive);
+
+    void setDragSensitive(float sensitive);
+
 private:
 	explicit Camera(const Entity entity) : _entity{ entity } {}
 
@@ -44,10 +48,13 @@ private:
 	float _phi{ -90.0f };	// XY-plane rotation [0; 360]
 	float _theta{ 80.0f };	// Z-axis rotation [1; 179]
 
+    float _zoomSensitive{ 5.0f };
+    float _dragSensitive{ 0.5f };
+
 	glm::mat4 _projection{ glm::perspective(glm::radians(DEFAULT_FOV), 1.0f, DEFAULT_NEAR, DEFAULT_FAR) };
 
 	static constexpr auto MIN_RADIUS = 1.0f;
-	static constexpr auto MAX_RADIUS = 500.0f;
+	static constexpr auto MAX_RADIUS = 5000.0f;
 
 	static constexpr auto MIN_THETA = 1.0f;
 	static constexpr auto MAX_THETA = 179.0f;
@@ -55,9 +62,6 @@ private:
 	static constexpr auto DEFAULT_FOV  = 45.0f;
 	static constexpr auto DEFAULT_NEAR = 0.1f;
 	static constexpr auto DEFAULT_FAR  = 100.0f;
-
-	static constexpr auto ZOOM_SENSITIVE = 1.0f;
-	static constexpr auto DRAG_SENSITIVE = 0.5f;
 
 	friend class Engine;
 };
