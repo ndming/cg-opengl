@@ -17,3 +17,8 @@ glm::mat4 getOrbitTransform(
     const glm::vec3& orbitOrientation = glm::vec3{ 0.0f, 0.0f, 1.0f },
     const glm::vec3& orbitCenter = glm::vec3{ 0.0f, 0.0f, 0.0f }
 );
+
+glm::mat4 getRingTransform(
+    float revolveAngle, float tiltingAngle, const std::function<float(float)>& orbitX,
+    const std::function<float(float)>& orbitY, const glm::vec3& orbitOrientation = glm::vec3{ 1.0f, 1.0f, 1.0f }
+);

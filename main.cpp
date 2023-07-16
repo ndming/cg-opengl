@@ -7,6 +7,7 @@
 #include "Shader.h"
 
 #include "drawable/Orbit.h"
+#include "drawable/Ring.h"
 #include "drawable/Sphere.h"
 
 #include "utils/MediaExporter.h"
@@ -60,7 +61,10 @@ constexpr auto JUPITER_ROTATING_SPEED = 125.3387f; // km/h, scaled by 375
 constexpr auto SATURN_SEMI_MAJOR = 953.88f; // using AU, multiplied by 100
 constexpr auto SATURN_SEMI_MINOR = 951.11f; // using AU, multiplied by 100
 constexpr auto SATURN_RADIUS = 19.4628f;    // using AU, multiplied by 50000
+constexpr auto SATURN_RING_RADIUS = 22.35f; // using AU, multiplied by 50000
+constexpr auto SATURN_RING_THICKNESS = 11.0f;
 constexpr auto SATURN_TILTING = 26.73f;     // degree
+constexpr auto SATURN_RING_TILTING = 27.0f; // degree
 constexpr auto SATURN_REVOLVING_SPEED = 0.0258f; // km/s, scaled by 375
 constexpr auto SATURN_ROTATING_SPEED = 92.856f;  // km/h, scaled by 375
 
@@ -108,7 +112,7 @@ int main() {
     // Clear the color buffer
     auto clearOptions = renderer->getClearOptions();
     // clearOptions.clearColor = { 0.09804f, 0.14118f, 0.15686f, 1.0f };
-    clearOptions.clearColor = { 0.02f, 0.04f, 0.06f, 1.0f };
+    clearOptions.clearColor = { 0.02f, 0.02f, 0.02f, 1.0f };
     renderer->setClearOptions(clearOptions);
 
     // Toggle polygon mode on T press
@@ -305,6 +309,15 @@ int main() {
             .build(*engine);
     tm->setTransform(saturnOrbit->getEntity(), getOrbitTransform(saturnOrientation));
 
+    // Saturn ring
+    const auto saturnRingDiff = loadTexture("saturn/saturn_ring_diffuse_2k.png", *engine);
+    const auto saturnRing = Ring::Builder()
+            .radius(SATURN_RING_RADIUS)
+            .thickness(SATURN_RING_THICKNESS)
+            .shaderModel(Shader::Model::PHONG)
+            .textureDiffuse(saturnRingDiff)
+            .build(*engine);
+
     // Uranus
     const auto uranusDiff = loadTexture("uranus/uranus_diffuse_2k.jpg", *engine);
     const auto uranus = Sphere::GeographicBuilder()
@@ -375,6 +388,7 @@ int main() {
     scene->addEntity(jupiterOrbit->getEntity());
     scene->addEntity(saturn->getEntity());
     scene->addEntity(saturnOrbit->getEntity());
+    scene->addEntity(saturnRing->getEntity());
     scene->addEntity(uranus->getEntity());
     scene->addEntity(uranusOrbit->getEntity());
     scene->addEntity(neptune->getEntity());
@@ -448,6 +462,12 @@ int main() {
             SATURN_RADIUS,saturnX, saturnY, saturnOrientation
         );
         tm->setTransform(saturn->getEntity(), saturnTf);
+
+        const auto saturnRingTf = getRingTransform(
+            saturnRevolveAngle, glm::radians(SATURN_RING_TILTING),
+            saturnX, saturnY, saturnOrientation
+        );
+        tm->setTransform(saturnRing->getEntity(), saturnRingTf);
 
         static auto uranusRevolveAngle = 0.0f;
         static auto uranusRotateAngle = 0.0f;

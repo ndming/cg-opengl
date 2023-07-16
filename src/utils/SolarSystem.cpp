@@ -50,3 +50,31 @@ glm::mat4 getOrbitTransform(const glm::vec3& orbitOrientation, const glm::vec3& 
     transform *= orientingMat;
     return transform;
 }
+
+glm::mat4 getRingTransform(
+    const float revolveAngle, const float tiltingAngle, const std::function<float(float)>& orbitX,
+    const std::function<float(float)>& orbitY, const glm::vec3& orbitOrientation
+) {
+    auto transform = glm::mat4(1.0f);
+
+    // Orientation
+    const auto orientingAngle = glm::acos(glm::normalize(orbitOrientation).z);
+    if (orbitOrientation != glm::vec3{ 0.0f, 0.0f, 1.0f }) {
+        const auto orientingAxis = glm::normalize(glm::cross(glm::vec3{ 0.0f, 0.0f, 1.0f }, orbitOrientation));
+        const auto orientingQuat = glm::angleAxis(orientingAngle, orientingAxis);
+        const auto orientingMat = glm::mat4_cast(orientingQuat);
+        transform *= orientingMat;
+    }
+
+    // Revolve
+    const auto revolveVec = glm::vec3{ orbitX(revolveAngle), orbitY(revolveAngle), 0.0f };
+    transform = glm::translate(transform, revolveVec);
+
+    // Tilt
+    const auto tiltingAxis = glm::vec3{ 0.0f, 1.0f, 0.0f };
+    const auto tiltingQuat = glm::angleAxis(tiltingAngle - orientingAngle, tiltingAxis);
+    const auto tiltingMat = glm::mat4_cast(tiltingQuat);
+    transform *= tiltingMat;
+
+    return transform;
+}
