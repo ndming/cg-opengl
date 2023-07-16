@@ -55,6 +55,7 @@ set(SOURCES
         src/drawable/Mesh.cpp
         src/drawable/Orbit.cpp
         src/drawable/Pyramid.cpp
+        src/drawable/Ring.cpp
         src/drawable/Sphere.cpp
         src/drawable/Aura.cpp
         src/drawable/Tetrahedron.cpp
