@@ -8,11 +8,11 @@ Aura::Builder& Aura::Builder::color(const float r, const float g, const float b)
 	return *this;
 }
 
-std::unique_ptr<Drawable> Aura::Builder::build(Engine& engine) {
-	shaderModel(Shader::Model::UNLIT);
-	recursiveDepth(RECURSIVE_DEPTH);
-	initialPolygon(Polyhedron::ICOSAHEDRON);
-	radius(AURA_RADIUS);
+Aura::Builder& Aura::Builder::coreRadius(float value) {
+	radius(value);
+	return *this;
+}
 
+std::unique_ptr<Drawable> Aura::Builder::build(Engine& engine) {
 	return SubdivisionBuilder::build(engine);
 }

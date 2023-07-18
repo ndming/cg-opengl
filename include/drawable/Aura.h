@@ -14,20 +14,17 @@ public:
 	Aura& operator=(const Aura&) = delete;
 	Aura& operator=(Aura&&) noexcept = delete;
 
-	class Builder final : protected Sphere::SubdivisionBuilder {
+	class Builder final : public Sphere::SubdivisionBuilder {
 	public:
 		explicit Builder() { color(1.0f, 1.0f, 1.0f); }
 
 		Builder& color(float r, float g, float b);
 
+        Builder& coreRadius(float radius);
+
 		std::unique_ptr<Drawable> build(Engine& engine) override;
-
-	private:
-		static constexpr auto RECURSIVE_DEPTH = 2;
-
-		static constexpr auto AURA_RADIUS = 0.25f;
 	};
 
 private:
-	explicit Aura(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
+	Aura(const Entity entity, Shader* const shader) : Drawable(entity, shader) {}
 };
