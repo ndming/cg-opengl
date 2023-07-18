@@ -23,6 +23,7 @@ std::unique_ptr<Drawable> Ring::Builder::build(Engine &engine) {
 
     const auto angleStep = 2.0f * numbers::pi_v<float> / static_cast<float>(_segments);
     const auto textureStep = 1.0f / static_cast<float>(_segments);
+
     for (auto i = 0; i <= _segments; ++i) {
         const auto angle = static_cast<float>(i) * angleStep;
         const auto v = static_cast<float>(i) * textureStep;
@@ -40,6 +41,25 @@ std::unique_ptr<Drawable> Ring::Builder::build(Engine &engine) {
         normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(1.0f);
         colors.push_back(BROWN[0]); colors.push_back(BROWN[1]); colors.push_back(BROWN[2]); colors.push_back(1.0f);
         texCoords.push_back(0.0f); texCoords.push_back(v);
+    }
+
+    for (auto i = 0; i <= _segments; ++i) {
+        const auto angle = static_cast<float>(i) * angleStep;
+        const auto v = static_cast<float>(i) * textureStep;
+
+        const auto outerPointX = cos(angle) * (_radius + _thickness);
+        const auto outerPointY = sin(angle) * (_radius + _thickness);
+        positions.push_back(outerPointX); positions.push_back(outerPointY); positions.push_back(0.0f);
+        normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(-1.0f);
+        colors.push_back(BROWN[0]); colors.push_back(BROWN[1]); colors.push_back(BROWN[2]); colors.push_back(1.0f);
+        texCoords.push_back(0.0f); texCoords.push_back(v);
+
+        const auto innerPointX = cos(angle) * _radius;
+        const auto innerPointY = sin(angle) * _radius;
+        positions.push_back(innerPointX); positions.push_back(innerPointY); positions.push_back(0.0f);
+        normals.push_back(0.0f); normals.push_back(0.0f); normals.push_back(-1.0f);
+        colors.push_back(YELLOW[0]); colors.push_back(YELLOW[1]); colors.push_back(YELLOW[2]); colors.push_back(1.0f);
+        texCoords.push_back(1.0f); texCoords.push_back(v);
     }
 
     const auto vertexCount = static_cast<int>(positions.size() / 3);
@@ -68,9 +88,11 @@ std::unique_ptr<Drawable> Ring::Builder::build(Engine &engine) {
 
     const auto shader = defaultShader(engine);
     const auto entity = EntityManager::get()->create();
-    RenderableManager::Builder(1)
-            .geometry(0, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *indexBuffer,static_cast<int>(indices.size()), 0)
+    RenderableManager::Builder(2)
+            .geometry(0, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *indexBuffer, vertexCount / 2, 0)
             .shader(0, shader)
+            .geometry(1, RenderableManager::PrimitiveType::TRIANGLE_STRIP, *vertexBuffer, *indexBuffer, vertexCount / 2, vertexCount)
+            .shader(1, shader)
             .build(entity);
 
     return std::unique_ptr<Drawable>(new Ring(entity, shader));
