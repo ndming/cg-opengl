@@ -64,6 +64,7 @@ set(SOURCES
         src/utils/MediaExporter.cpp
         src/utils/DescentIterator.cpp
         src/utils/SolarSystem.cpp
+        src/utils/StarGenerator.cpp
         src/utils/TextureLoader.cpp
         external/stb/stb_image.cpp
         external/stb/stb_image_write.cpp

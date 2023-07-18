@@ -12,6 +12,7 @@
 
 #include "utils/MediaExporter.h"
 #include "utils/SolarSystem.h"
+#include "utils/StarGenerator.h"
 #include "utils/TextureLoader.h"
 
 // Sun
@@ -62,7 +63,7 @@ constexpr auto SATURN_SEMI_MAJOR = 953.88f; // using AU, multiplied by 100
 constexpr auto SATURN_SEMI_MINOR = 951.11f; // using AU, multiplied by 100
 constexpr auto SATURN_RADIUS = 19.4628f;    // using AU, multiplied by 50000
 constexpr auto SATURN_RING_RADIUS = 22.35f; // using AU, multiplied by 50000
-constexpr auto SATURN_RING_THICKNESS = 11.0f;
+constexpr auto SATURN_RING_THICKNESS = 25.0f;
 constexpr auto SATURN_TILTING = 26.73f;     // degree
 constexpr auto SATURN_RING_TILTING = 27.0f; // degree
 constexpr auto SATURN_REVOLVING_SPEED = 0.0258f; // km/s, scaled by 375
@@ -168,7 +169,7 @@ int main() {
     // Update the projection and viewport on window resize
     context->setFramebufferCallback([&](const auto w, const auto h) {
         const auto ratio = static_cast<float>(w) / static_cast<float>(h);
-        camera->setProjection(45.0f, ratio, 0.1f, 8000.0f);
+        camera->setProjection(45.0f, ratio, 0.1f, 16000.0f);
         view->setViewport({ 0, 0, w, h });
     });
 
@@ -395,6 +396,13 @@ int main() {
     scene->addEntity(neptuneOrbit->getEntity());
     scene->addEntity(moon->getEntity());
     scene->addEntity(moonOrbit->getEntity());
+
+    const auto starGenerator = StarGenerator::Builder().build();
+    const auto starCount = 400;
+    for (auto i = 0; i < starCount; ++i) {
+        const auto starEntity = starGenerator->generate(tm, *engine);
+        scene->addEntity(starEntity);
+    }
 
     // A temporary workaround to make the orbits less jagged
     glLineWidth(1.5f);
