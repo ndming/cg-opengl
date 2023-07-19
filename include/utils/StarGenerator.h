@@ -14,6 +14,12 @@
 
 #include "drawable/Aura.h"
 
+struct Star {
+    Entity entity;
+    glm::mat4 tf;
+    Entity light;
+};
+
 class StarGenerator {
 public:
     class Builder {
@@ -44,7 +50,7 @@ public:
         Sphere::SubdivisionBuilder::Polyhedron _billetPolyhedron{ Sphere::SubdivisionBuilder::Polyhedron::ICOSAHEDRON };
     };
 
-    Entity generate(TransformManager* tm, Engine& engine);
+    Star generate(Engine& engine);
 
 private:
     StarGenerator(

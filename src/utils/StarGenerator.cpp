@@ -66,7 +66,7 @@ std::seed_seq StarGenerator::getSeedSequence() {
     return seed_seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
 }
 
-Entity StarGenerator::generate(TransformManager *tm, Engine& engine) {
+Star StarGenerator::generate(Engine& engine) {
     const auto star = Aura::Builder()
             .color(1.0f, 1.0f, 1.0f)
             .coreRadius(_coreRadiusDist(_generator))
@@ -84,7 +84,13 @@ Entity StarGenerator::generate(TransformManager *tm, Engine& engine) {
     auto transform = glm::translate(glm::mat4(1.0f), glm::vec3{ x, y, z });
     const auto size = _sizeDist(_generator);
     transform = glm::scale(transform, glm::vec3{ size, size, size });
-    tm->setTransform(star->getEntity(), transform);
 
-    return star->getEntity();
+    const auto light = EntityManager::get()->create();
+    LightManager::Builder(LightManager::Type::POINT)
+        .position(x, y, z)
+        .distance(LightManager::LightDistance::SUPER_MASSIVE)
+        .build(light);
+
+
+    return Star{ star->getEntity(), transform, light };
 }

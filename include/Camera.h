@@ -50,7 +50,7 @@ private:
 	glm::mat4 _projection{ glm::perspective(glm::radians(DEFAULT_FOV), 1.0f, DEFAULT_NEAR, DEFAULT_FAR) };
 
 	static constexpr auto MIN_RADIUS = 1.0f;
-	static constexpr auto MAX_RADIUS = 5000.0f;
+	static constexpr auto MAX_RADIUS = 8000.0f;
 
 	static constexpr auto MIN_THETA = 1.0f;
 	static constexpr auto MAX_THETA = 179.0f;
