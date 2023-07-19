@@ -113,6 +113,11 @@ void Shader::setUniform(const std::string_view name, const bool value) const {
 	glUniform1i(location, value);
 }
 
+void Shader::setUniform(const std::string_view name, const int value) const {
+    const auto location = glGetUniformLocation(_program, name.data());
+    glUniform1i(location, value);
+}
+
 void Shader::setUniform(const std::string_view name, const float* const matrix) const {
 	const auto location = glGetUniformLocation(_program, name.data());
 	glUniformMatrix4fv(location, 1, GL_FALSE, matrix);

@@ -6,6 +6,7 @@
 #include <array>
 #include <glad/glad.h>
 
+#include "Shader.h"
 #include "View.h"
 
 class Renderer {
@@ -43,6 +44,10 @@ private:
 	ClearOptions _clearOptions{};
 
 	PolygonMode _polygonMode{ PolygonMode::FILL };
+
+    void preprocessRendering(const View& view) const;
+    static void renderDirectionalLight(Entity light, Shader* shader, const glm::mat4& viewMat);
+    static void renderPointLight(Entity light, Shader* shader, const glm::mat4& viewMat, int idx);
 
 	friend class Engine;
 };

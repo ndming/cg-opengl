@@ -44,25 +44,26 @@ uniform bool enabledTexturedMaterial;
 uniform DirectionalLight directionalLight;
 uniform bool enabledDirectionalLight;
 
-uniform PointLight pointLight;
-uniform bool enabledPointLight;
+uniform PointLight pointLights[5];
+uniform int pointLightCount;
 
 vec3 calcDirLight(vec3 normal, vec3 toView);
-vec3 calcPointLight(vec3 normal, vec3 toView);
+vec3 calcPointLight(PointLight pointLight, vec3 normal, vec3 toView);
 
 void main() {
     vec3 norm = normalize(fragNormal);
     vec3 toView = normalize(-fragPosition);
-    
-    vec3 shading = vec3(0.0f);
+
+    vec3 shading = vec3(0.0);
     if (enabledDirectionalLight) {
         shading += calcDirLight(norm, toView);
     }
-    if (enabledPointLight) {
-        shading += calcPointLight(norm, toView);
+
+    for (int i = 0; i < pointLightCount; i++) {
+        shading += calcPointLight(pointLights[i], norm, toView);
     }
 
-	FragColor = vec4(shading, 1.0f);
+    FragColor = vec4(shading, 1.0);
 }
 
 vec3 calcDirLight(vec3 normal, vec3 toView) {
@@ -87,17 +88,17 @@ vec3 calcDirLight(vec3 normal, vec3 toView) {
     vec3 reflectDir = reflect(-toLight, normal);
     vec3 specular = directionalLight.specular;
     if (enabledTexturedMaterial) {
-        float spec = pow(max(dot(reflectDir, toView), 0.0f), texturedMaterial.shininess);
+        float spec = pow(max(dot(reflectDir, toView), 0.0), texturedMaterial.shininess);
         specular *= (spec * vec3(texture(texturedMaterial.specular, fragUV0)));
     } else {
-        float spec = pow(max(dot(reflectDir, toView), 0.0f), material.shininess);
+        float spec = pow(max(dot(reflectDir, toView), 0.0), material.shininess);
         specular *= (spec * material.specular);
     }
 
     return ambient + diffuse + specular;
 }
 
-vec3 calcPointLight(vec3 normal, vec3 toView) {
+vec3 calcPointLight(PointLight pointLight, vec3 normal, vec3 toView) {
     // Ambient
     vec3 ambient = pointLight.ambient;
     if (enabledTexturedMaterial) {
@@ -108,7 +109,7 @@ vec3 calcPointLight(vec3 normal, vec3 toView) {
     }
     // Diffuse
     vec3 toLight = normalize(pointLight.position - fragPosition);
-    float diff = max(dot(normal, toLight), 0.0f);
+    float diff = max(dot(normal, toLight), 0.0);
     vec3 diffuse = pointLight.diffuse * diff;
     if (enabledTexturedMaterial) {
         diffuse *= vec3(texture(texturedMaterial.diffuse, fragUV0));
@@ -119,16 +120,16 @@ vec3 calcPointLight(vec3 normal, vec3 toView) {
     vec3 reflectDir = reflect(-toLight, normal);
     vec3 specular = pointLight.specular;
     if (enabledTexturedMaterial) {
-        float spec = pow(max(dot(reflectDir, toView), 0.0f), texturedMaterial.shininess);
+        float spec = pow(max(dot(reflectDir, toView), 0.0), texturedMaterial.shininess);
         specular *= spec * vec3(texture(texturedMaterial.specular, fragUV0));
     } else {
-        float spec = pow(max(dot(reflectDir, toView), 0.0f), material.shininess);
+        float spec = pow(max(dot(reflectDir, toView), 0.0), material.shininess);
         specular *= (spec * material.specular);
     }
 
     // Attenuation
     float dist = length(pointLight.position - fragPosition);
-    float attenuation = 1.0f / (pointLight.constant + pointLight.linear * dist + pointLight.quadratic * (dist * dist));
+    float attenuation = 1.0 / (pointLight.constant + pointLight.linear * dist + pointLight.quadratic * (dist * dist));
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;

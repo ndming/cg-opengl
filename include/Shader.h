@@ -43,16 +43,32 @@ public:
 		static constexpr auto DIRECTIONAL_LIGHT_DIFFUSE   = "directionalLight.diffuse";
 		static constexpr auto DIRECTIONAL_LIGHT_SPECULAR  = "directionalLight.specular";
 
-		static constexpr auto POINT_LIGHT_POSITION  = "pointLight.position";
-		static constexpr auto POINT_LIGHT_AMBIENT   = "pointLight.ambient";
-		static constexpr auto POINT_LIGHT_DIFFUSE   = "pointLight.diffuse";
-		static constexpr auto POINT_LIGHT_SPECULAR  = "pointLight.specular";
-		static constexpr auto POINT_LIGHT_CONSTANT  = "pointLight.constant";
-		static constexpr auto POINT_LIGHT_LINEAR    = "pointLight.linear";
-		static constexpr auto POINT_LIGHT_QUADRATIC = "pointLight.quadratic";
+        static constexpr auto MAX_POINT_LIGHT_COUNT = 5;
+        static constexpr auto POINT_LIGHT_COUNT = "pointLightCount";
+
+        static std::string pointLightPositionAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].position";
+        }
+        static std::string pointLightAmbientAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].ambient";
+        }
+        static std::string pointLightDiffuseAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].diffuse";
+        }
+        static std::string pointLightSpecularAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].specular";
+        }
+        static std::string pointLightConstantAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].constant";
+        }
+        static std::string pointLightLinearAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].linear";
+        }
+        static std::string pointLightQuadraticAt(const int i) {
+            return "pointLights[" + std::to_string(i) + "].quadratic";
+        }
 
 		static constexpr auto ENABLED_DIRECTIONAL_LIGHT = "enabledDirectionalLight";
-		static constexpr auto ENABLED_POINT_LIGHT       = "enabledPointLight";
         static constexpr auto ENABLED_TEXTURED_MATERIAL = "enabledTexturedMaterial";
         static constexpr auto ENABLED_UNLIT_TEXTURE     = "enabledUnlitTexture";
 
@@ -89,6 +105,7 @@ public:
 	void use() const;
 
 	void setUniform(std::string_view name, bool value) const;
+    void setUniform(std::string_view name, int value) const;
 	void setUniform(std::string_view name, const float* matrix) const;
 	void setUniform(std::string_view name, float value) const;
 	void setUniform(std::string_view name, float x, float y, float z) const;
