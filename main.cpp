@@ -34,8 +34,14 @@ glm::mat4 getBallTransform(
 glm::mat4 getContourBallTransform(float x, float y, float radius);
 
 static float ballAngle{ 0.0f };
+constexpr auto MESH_HALF_EXTENT = 10.0f;
+constexpr auto HEAT_VIEW_MIN_HE = MESH_HALF_EXTENT + 4.0f;
 
-inline float getAuraVelocity(long deltaTimeMillis, float speed);
+bool isMouseClickInContour(
+    float x, float y, int frameWidth, int frameHeight,
+    float mapHalfExtent, float viewMinHalfExtent, float phi, float initialPhi,
+    float* outX, float* outY
+);
 
 int main() {
     // The window context
@@ -83,22 +89,32 @@ int main() {
 
     // Create a camera
     const auto camera = engine->createCamera(EntityManager::get()->create());
-    camera->setRadius(30.0f);
+    camera->setRadius(MESH_HALF_EXTENT * 3.0f);
     camera->setLatitudeAngle(45.0f);
 
-    // Create another for the contour camera
+    // Create another camera for the contour view
     const auto contourCam = engine->createCamera(EntityManager::get()->create());
     contourCam->setRadius(1.0f);
     contourCam->setLatitudeAngle(0.0f);
     contourCam->setLongitudeAngle(-90.0f);
 
-    context->setMouseScrollCallback([&camera](const auto offsetY) {
-        camera->relativeZoom(offsetY);
+    Context::setOnMouseScroll([&](const auto offsetY) {
+        const auto& [width, height] = context->getFramebufferSize();
+        const auto& [xPos, yPos] = context->getMousePos();
+        if (xPos < static_cast<float>(width) / 2.0f) {
+            camera->relativeZoom(offsetY);
+        } else {
+            contourCam->relativeZoom(offsetY);
+        }
     });
-    // Pan the camera around the looking sphere
-    context->setMouseDragPerpetualCallback([&camera, &contourCam](const auto offsetX, const auto offsetY) {
-        camera->relativeDrag(offsetX, offsetY);
-        contourCam->relativeDrag(offsetX, 0.0f);
+
+    Context::setOnMouseDragPerpetual([&](const auto offsetX, const auto offsetY) {
+        const auto& [width, height] = context->getFramebufferSize();
+        const auto& [xPos, yPos] = context->getMousePos();
+        if (xPos < static_cast<float>(width) / 2.0f) {
+            camera->relativeDrag(offsetX, offsetY);
+            contourCam->relativeDrag(offsetX, 0.0f);
+        }
     });
 
     // Create a scene
@@ -107,7 +123,9 @@ int main() {
     // Create and set up a view
     const auto view = engine->createView();
     // Create a skybox
-    const auto skybox = Skybox::Builder().color(0.02f, 0.04f, 0.06f, 1.0f).build(*engine);
+    const auto skybox = Skybox::Builder()
+            .color(0.02f, 0.04f, 0.06f, 1.0f)
+            .build(*engine);
     view->setSkybox(skybox);
     view->setCamera(camera);
     view->setScene(scene);
@@ -118,25 +136,31 @@ int main() {
     // Create and set up another view
     const auto contourView = engine->createView();
     // Create another skybox
-    const auto contourSkybox = Skybox::Builder().color(0.09804f, 0.14118f, 0.15686f, 1.0f).build(*engine);
+    const auto contourSkybox = Skybox::Builder()
+            .color(0.09804f, 0.14118f, 0.15686f, 1.0f)
+            .build(*engine);
     contourView->setSkybox(contourSkybox);
     contourView->setCamera(contourCam);
     contourView->setScene(contourScene);
 
     // Update the projection and viewport on window resize
-    constexpr auto halfExtent = 10.0f;
     context->setFramebufferCallback([&](const auto w, const auto h) {
         const auto ratio = (static_cast<float>(w) / 2.0f) / static_cast<float>(h);
         camera->setProjection(45.0f, ratio, 0.1f, 100.0f);
         view->setViewport({ 0, 0, w / 2, h });
 
-        const auto extent = halfExtent + 4.0f;
         if ((w / 2) > h) {
             const auto cRatio = (static_cast<float>(w) / 2.0f) / static_cast<float>(h);
-            contourCam->setProjection(-extent * cRatio, extent * cRatio, -extent, extent, 0.0f, 5.0f);
+            contourCam->setProjection(
+                    -HEAT_VIEW_MIN_HE * cRatio, HEAT_VIEW_MIN_HE * cRatio,
+                    -HEAT_VIEW_MIN_HE, HEAT_VIEW_MIN_HE, 0.0f, 100.0f
+            );
         } else {
             const auto cRatio = static_cast<float>(h) / (static_cast<float>(w) / 2.0f);
-            contourCam->setProjection(-extent, extent, -extent * cRatio, extent * cRatio, 0.0f, 5.0f);
+            contourCam->setProjection(
+                    -HEAT_VIEW_MIN_HE, HEAT_VIEW_MIN_HE,
+                    -HEAT_VIEW_MIN_HE * cRatio, HEAT_VIEW_MIN_HE * cRatio, 0.0f, 100.0f
+            );
         }
         contourView->setViewport({ w / 2, 0, w / 2, h });
     });
@@ -145,15 +169,15 @@ int main() {
     const auto tm = engine->getTransformManager();
 
     // The rolling ball
-    const auto earthDiff = loadTexture("earth/earth_diffuse.png", *engine);
-    const auto earthSpec = loadTexture("earth/earth_specular.png", *engine);
+    const auto ballDiff = loadTexture("softball/softball_diffuse.jpg", *engine);
+    const auto ballSpec = loadTexture("softball/softball_bump.jpg", *engine);
     const auto ball = Sphere::GeographicBuilder()
             .longitudes(60)
             .latitudes(60)
             .shaderModel(Shader::Model::PHONG)
-            .textureDiffuse(earthDiff)
-            .textureSpecular(earthSpec)
-            .textureShininess(100.0f)
+            .textureDiffuse(ballDiff)
+            .textureSpecular(ballSpec)
+            .textureShininess(80.0f)
             .build(*engine);
     static constexpr auto ballRadius = 0.4f;
     // Scale the ball down to this radius
@@ -175,7 +199,7 @@ int main() {
 
     // The mesh
     const auto mesh = Mesh::Builder(objective)
-            .halfExtent(halfExtent)
+            .halfExtent(MESH_HALF_EXTENT)
             .segments(100)
             .shaderModel(Shader::Model::PHONG)
             .phongMaterial(phong::TURQUOISE)
@@ -209,7 +233,7 @@ int main() {
     const auto contour = Contour::Builder(objective)
             .low(-1.0f)
             .high(5.0f)
-            .halfExtent(halfExtent)
+            .halfExtent(MESH_HALF_EXTENT)
             .segments(100)
             .build(*engine);
 
@@ -233,7 +257,7 @@ int main() {
     // Random the SGD state on R press
     context->setOnPress(Context::Key::R, [&]{
         // Random the position of the ball on the mesh
-        sgd->randomState(8.0f, 8.0f);
+        sgd->randomState(8.0f);
         // Get the random position
         const auto [x, y] = sgd->getState();
         // Reset the rolling angle first
@@ -268,42 +292,29 @@ int main() {
         contourTracer->resetTo(x, y, *contourScene, *engine);
     });
 
-    // Move the ball to some interested position with X
-    context->setOnPress(Context::Key::X, [&]{
-        const auto x = -6.0f;
-        const auto y = -0.5f;
-        // Move the ball to some peak of the mesh
-        sgd->resetState(x, y);
-        // Reset the rolling angle first
-        ballAngle = 0.0f;
-        // Transform the ball
-        const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
-        tm->setTransform(ball->getEntity(), trans);
-        // Transform the contour ball
-        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
-        tm->setTransform(contourBall->getEntity(), contourTrans);
-        // Reset the tracer
-        tracer->resetTo(x, y, *scene, *engine);
-        contourTracer->resetTo(x, y, *contourScene, *engine);
-    });
-
-    // Move the ball to some interested position with C
-    context->setOnPress(Context::Key::C, [&]{
-        const auto x = 0.0f;
-        const auto y = 0.0f;
-        // Move the ball to some peak of the mesh
-        sgd->resetState(x, y);
-        // Reset the rolling angle first
-        ballAngle = 0.0f;
-        // Transform the ball
-        const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
-        tm->setTransform(ball->getEntity(), trans);
-        // Transform the contour ball
-        const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
-        tm->setTransform(contourBall->getEntity(), contourTrans);
-        // Reset the tracer
-        tracer->resetTo(x, y, *scene, *engine);
-        contourTracer->resetTo(x, y, *contourScene, *engine);
+    // Move the ball to the position with mouse click on the contour map
+    Context::setOnMouseLeftClick([&](const auto xPos, const auto yPos) {
+        const auto& [width, height] = context->getFramebufferSize();
+        const auto phi = contourCam->getLongitudeAngle();
+        float x, y;
+        if (isMouseClickInContour(
+            xPos, yPos, width, height,
+            MESH_HALF_EXTENT, HEAT_VIEW_MIN_HE, phi, -90.0f, &x, &y
+        )) {
+            // Move the ball to this position
+            sgd->resetState(x, y);
+            // Reset the rolling angle first
+            ballAngle = 0.0f;
+            // Transform the ball
+            const auto trans = getBallTransform(x, y, ballRadius, 0.0f, objective, gradientX, gradientY);
+            tm->setTransform(ball->getEntity(), trans);
+            // Transform the contour ball
+            const auto contourTrans = getContourBallTransform(x, y, contourBallRadius);
+            tm->setTransform(contourBall->getEntity(), contourTrans);
+            // Reset the tracer
+            tracer->resetTo(x, y, *scene, *engine);
+            contourTracer->resetTo(x, y, *contourScene, *engine);
+        }
     });
 
     // Manually descent the ball on SPACE holding
@@ -311,7 +322,7 @@ int main() {
         // Get the current position
         const auto [prevX, prevY] = sgd->getState();
         // Descent the ball
-        sgd->iterate();
+        sgd->iterate(MESH_HALF_EXTENT);
         // Get the new position
         const auto [x, y] = sgd->getState();
         const auto distance = glm::distance(glm::vec2{ prevX, prevY }, glm::vec2{ x, y });
@@ -333,81 +344,15 @@ int main() {
             .ambient(0.1f, 0.1f, 0.1f)
             .build(globalLight);
 
-    // Render a small movable aura
-    static auto auraPos = glm::vec3{8.0f, 8.0f, 8.0f };
-    static constexpr auto SPEED = 5.0f;
-
-    // Add a point light
+    // Render a small aura
+    const auto auraPos = glm::vec3{8.0f, 8.0f, 8.0f };
     const auto pointLight = EntityManager::get()->create();
     LightManager::Builder(LightManager::Type::POINT)
             .position(auraPos.x, auraPos.y, auraPos.z)
             .build(pointLight);
-
     const auto aura = Aura::Builder().build(*engine);
     const auto auraTrans = translate(glm::mat4(1.0f), auraPos);
     tm->setTransform(aura->getEntity(), auraTrans);
-
-    // Move the aura forward
-    context->setOnLongPress(Context::Key::W, [&] {
-        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
-        auraPos += glm::vec3{0.0f, 1.0f, 0.0f } * velocity;
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
-
-    // Move the aura backward
-    context->setOnLongPress(Context::Key::S, [&] {
-        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
-        auraPos += glm::vec3{0.0f, -1.0f, 0.0f } * velocity;
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
-
-    // Move the aura left
-    context->setOnLongPress(Context::Key::A, [&] {
-        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
-        auraPos += glm::vec3{-1.0f, 0.0f, 0.0f } * velocity;
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
-
-    // Move the aura right
-    context->setOnLongPress(Context::Key::D, [&] {
-        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
-        auraPos += glm::vec3{1.0f, 0.0f, 0.0f} * velocity;
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
-
-    // Move the aura up
-    context->setOnLongPress(Context::Key::LCTR, [&] {
-        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
-        auraPos += glm::vec3{0.0f, 0.0f, -1.0f } * velocity;
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
-
-    // Move the aura down
-    context->setOnLongPress(Context::Key::LSHF, [&] {
-        const auto velocity = getAuraVelocity(context->getDeltaTimeMillis(), SPEED);
-        auraPos += glm::vec3{0.0f, 0.0f, 1.0f } * velocity;
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
-
-    // Snap the aura back to the initial position
-    context->setOnLongPress(Context::Key::I, [&] {
-        auraPos = glm::vec3{4.0f, 4.0f, 8.0f };
-        engine->getLightManager()->setPosition(pointLight, auraPos.x, auraPos.y, auraPos.z);
-        const auto trans = translate(glm::mat4(1.0f), auraPos);
-        tm->setTransform(aura->getEntity(), trans);
-    });
 
     // Add renderables to the scene
     scene->addEntity(ball->getEntity());
@@ -432,8 +377,8 @@ int main() {
     engine->destroyEntity(aura->getEntity());
     engine->destroyEntity(globalLight);
     engine->destroyEntity(pointLight);
-    engine->destroyTexture(earthDiff);
-    engine->destroyTexture(earthSpec);
+    engine->destroyTexture(ballDiff);
+    engine->destroyTexture(ballSpec);
     engine->destroyShader(ball->getShader());
     engine->destroyShader(contourBall->getShader());
     engine->destroyShader(mesh->getShader());
@@ -495,6 +440,33 @@ glm::mat4 getContourBallTransform(const float x, const float y, const float radi
     return trans;
 }
 
-inline float getAuraVelocity(const long deltaTimeMillis, const float speed) {
-    return static_cast<float>(deltaTimeMillis) / 1000.0f * speed;
+bool isMouseClickInContour(
+    const float x, const float y, const int frameWidth, const int frameHeight,
+    const float mapHalfExtent, const float viewMinHalfExtent, const float phi, const float initialPhi,
+    float* const outX, float* const outY
+) {
+    const auto pivotX = static_cast<float>(frameWidth) * 3.0f / 4.0f;
+    const auto pivotY = static_cast<float>(frameHeight) / 2.0f;
+
+    const auto w = static_cast<float>(frameWidth);
+    const auto h = static_cast<float>(frameHeight);
+    const auto scaleFactor = ((w / 2.0f) > h) ? h / (viewMinHalfExtent * 2.0f) : w / (viewMinHalfExtent * 4.0f);
+
+    const auto xLocal = (x - pivotX) / scaleFactor;
+    const auto yLocal = (pivotY - y) / scaleFactor;
+
+    const auto angleRadians = glm::radians(phi - initialPhi);
+    const auto cosAngle = glm::cos(angleRadians);
+    const auto sinAngle = glm::sin(angleRadians);
+
+    const auto xPos = cosAngle * xLocal - sinAngle * yLocal;
+    const auto yPos = sinAngle * xLocal + cosAngle * yLocal;
+
+    if (std::abs(xPos) > mapHalfExtent || std::abs(yPos) > mapHalfExtent) {
+        return false;
+    }
+
+    *outX = xPos;
+    *outY = yPos;
+    return true;
 }
