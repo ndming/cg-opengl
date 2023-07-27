@@ -26,7 +26,8 @@ std::unique_ptr<DescentIterator> DescentIterator::Builder::build() {
         throw std::runtime_error("DescentIterator: Both gradientX and gradient Y must be set.");
     }
     return std::unique_ptr<DescentIterator>{
-        new DescentIterator{std::move(_gradientX), std::move(_gradientY), _convergenceRate
+        new DescentIterator{
+            std::move(_gradientX), std::move(_gradientY), _convergenceRate
         }
     };
 }
@@ -51,18 +52,32 @@ void DescentIterator::resetState(const float x, const float y) {
     _y = y;
 }
 
-void DescentIterator::randomState(float halfExtentX, float halfExtentY) {
+void DescentIterator::randomState(const float halfExtentX, const float halfExtentY) {
     auto distX = std::uniform_real_distribution{ -halfExtentX, halfExtentX };
     _x = distX(_generator);
     auto distY = std::uniform_real_distribution{ -halfExtentY, halfExtentY };
     _y = distY(_generator);
 }
 
-void DescentIterator::iterate() {
+void DescentIterator::randomState(const float halfExtent) {
+    randomState(halfExtent, halfExtent);
+}
+
+void DescentIterator::iterate(const float halfExtentX, const float halfExtentY) {
     const auto tmpX = _x;
     const auto tmpY = _y;
     _x = tmpX - _convergenceRate * _gradientX(tmpX, tmpY);
+    if (std::abs(_x) > halfExtentX) {
+        _x = (_x < 0) ? -halfExtentX : halfExtentX;
+    }
     _y = tmpY - _convergenceRate * _gradientY(tmpX, tmpY);
+    if (std::abs(_y) > halfExtentY) {
+        _y = (_y < 0) ? -halfExtentY : halfExtentY;
+    }
+}
+
+void DescentIterator::iterate(float halfExtent) {
+    iterate(halfExtent, halfExtent);
 }
 
 std::pair<float, float> DescentIterator::getState() const {

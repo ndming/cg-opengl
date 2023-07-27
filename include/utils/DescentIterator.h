@@ -30,8 +30,10 @@ public:
     void resetState(float x, float y);
 
     void randomState(float halfExtentX, float halfExtentY);
+    void randomState(float halfExtent);
 
-    void iterate();
+    void iterate(float halfExtentX, float halfExtentY);
+    void iterate(float halfExtent);
 
 private:
     DescentIterator(
@@ -43,7 +45,7 @@ private:
     const std::function<float(float, float)> _gradientX;
     const std::function<float(float, float)> _gradientY;
 
-    const float _convergenceRate{ 0.1f };
+    const float _convergenceRate;
 
     float _x{ 0.0f };
     float _y{ 0.0f };
