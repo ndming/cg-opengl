@@ -32,7 +32,7 @@ When done, run the executable `CG2023` produced by the build to run the program.
 ```commandline
 cmake -G "Visual Studio 17 2022" -B build/vs -DCMAKE_BUILD_TYPE=Release
 ```
-Open the `cg_opengl.sln` file (inside the `build/vs` directory) with Visual Studio and build the solution. Alternatively 
+Open the `CG2023.sln` file (inside the `build/vs` directory) with Visual Studio and build the solution. Alternatively 
 the build can be invoked indirectly through CMake:
 ```commandline
 cmake --build build/vs --target CG2023 --config Release
