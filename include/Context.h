@@ -49,15 +49,16 @@ public:
 
     void setOnLongPress(Key key, const std::function<void()>& listener);
 
-    void setMouseScrollCallback(const std::function<void(float)>& callback) const;
-
-    void setMouseDragPerpetualCallback(const std::function<void(float, float)>& callback) const;
+    static void setOnMouseLeftClick(const std::function<void(float, float)>& callback);
+    static void setOnMouseScroll(const std::function<void(float)>& callback) ;
+    static void setOnMouseDragPerpetual(const std::function<void(float, float)>& callback) ;
 
     void loop(const std::function<void()>& onFrame);
 
     [[nodiscard]] long getDeltaTimeMillis() const;
 
     [[nodiscard]] std::pair<int, int> getFramebufferSize() const;
+    [[nodiscard]] std::pair<float, float> getMousePos() const;
 
     static constexpr auto VERSION_MAJOR = 4;
     static constexpr auto VERSION_MINOR = 4;
@@ -80,5 +81,6 @@ private:
 
     std::map<Key, std::function<void()>> _onLongPressListeners{};
 
+    void initializeMouseCallbacks() const;
     void processInputListeners();
 };

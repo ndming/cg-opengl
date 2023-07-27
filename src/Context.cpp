@@ -14,10 +14,10 @@
 #include "Context.h"
 
 static std::function<void(int, int)> mFramebufferCallback{ [](auto, auto) {} };
+static std::function<void(float, float)> mMouseLeftClickCallback{ [](auto, auto) {} };
 static std::function<void(float)> mMouseScrollCallback{ [](auto) {} };
 static std::function<void(float, float)> mMouseDragPerpetualCallback{ [](auto, auto) {} };
 
-static GLFWwindow* mWindow = nullptr;
 static bool mDragging = false;
 static float mLastX = 0.0f;
 static float mLastY = 0.0f;
@@ -59,22 +59,7 @@ Context::Context(const std::string_view name, const int width, const int height)
         throw std::runtime_error("Failed to initialize GLAD\n");
     }
 
-    mWindow = _window;
-
-    glfwSetMouseButtonCallback(_window, [](auto _, const auto button, const auto action, auto mods) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            if (action == GLFW_PRESS) {
-                double xPos, yPos;
-                glfwGetCursorPos(mWindow, &xPos, &yPos);
-                mLastX = static_cast<float>(xPos);
-                mLastY = static_cast<float>(yPos);
-                mDragging = true;
-            }
-            else if (action == GLFW_RELEASE) {
-                mDragging = false;
-            }
-        }
-    });
+    initializeMouseCallbacks();
 }
 
 void Context::setClose(const bool close) const {
@@ -93,15 +78,29 @@ void Context::setOnLongPress(const Key key, const std::function<void()>& listene
     _onLongPressListeners[key] = listener;
 }
 
-void Context::setMouseScrollCallback(const std::function<void(float)>& callback) const {
-    mMouseScrollCallback = callback;
+void Context::initializeMouseCallbacks() const {
+    glfwSetMouseButtonCallback(_window, [](const auto window, const auto button, const auto action, auto mods) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            if (action == GLFW_PRESS) {
+                double xPos, yPos;
+                glfwGetCursorPos(window, &xPos, &yPos);
+
+                mLastX = static_cast<float>(xPos);
+                mLastY = static_cast<float>(yPos);
+                mMouseLeftClickCallback(mLastX, mLastY);
+
+                mDragging = true;
+            }
+            else if (action == GLFW_RELEASE) {
+                mDragging = false;
+            }
+        }
+    });
+
     glfwSetScrollCallback(_window, [](auto _, const auto offsetX, const auto offsetY) {
         mMouseScrollCallback(static_cast<float>(offsetY));
     });
-}
 
-void Context::setMouseDragPerpetualCallback(const std::function<void(float, float)>& callback) const {
-    mMouseDragPerpetualCallback = callback;
     glfwSetCursorPosCallback(_window, [](auto _, const auto xPos, const auto yPos) {
         if (mDragging) {
             const auto offsetX = static_cast<float>(xPos) - mLastX;
@@ -112,6 +111,18 @@ void Context::setMouseDragPerpetualCallback(const std::function<void(float, floa
             mMouseDragPerpetualCallback(offsetX, offsetY);
         }
     });
+}
+
+void Context::setOnMouseLeftClick(const std::function<void(float, float)> &callback) {
+    mMouseLeftClickCallback = callback;
+}
+
+void Context::setOnMouseScroll(const std::function<void(float)>& callback) {
+    mMouseScrollCallback = callback;
+}
+
+void Context::setOnMouseDragPerpetual(const std::function<void(float, float)>& callback) {
+    mMouseDragPerpetualCallback = callback;
 }
 
 void Context::loop(const std::function<void()>& onFrame) {
@@ -145,6 +156,12 @@ std::pair<int, int> Context::getFramebufferSize() const {
     int width, height;
     glfwGetFramebufferSize(_window, &width, &height);
     return std::make_pair(width, height);
+}
+
+std::pair<float, float> Context::getMousePos() const {
+    double xPos, yPos;
+    glfwGetCursorPos(_window, &xPos, &yPos);
+    return { static_cast<float>(xPos), static_cast<float>(yPos) };
 }
 
 void Context::setFramebufferCallback(const std::function<void(int, int)>& callback) const {
