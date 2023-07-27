@@ -49,6 +49,10 @@ void Camera::setLongitudeAngle(const float degree) {
     _phi = degree;
 }
 
+float Camera::getLongitudeAngle() const {
+	return _phi;
+}
+
 void Camera::setLatitudeAngle(const float degree) {
     _theta = glm::clamp(degree, MIN_THETA, MAX_THETA);
 }

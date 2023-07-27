@@ -32,6 +32,7 @@ public:
     void setRadius(float radius);
 
     void setLongitudeAngle(float degree);
+    [[nodiscard]] float getLongitudeAngle() const;
 
     void setLatitudeAngle(float degree);
 
